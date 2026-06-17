@@ -10,6 +10,9 @@ linters:
     - lll
     - errchkjson
     - ireturn
+    # gomodguard is deprecated in favour of gomodguard_v2, which stays enabled
+    # via `default: all`; disabling the old name silences the deprecation warning.
+    - gomodguard
   settings:
     dupl:
       threshold: 170
@@ -47,6 +50,12 @@ linters:
       require-explanation: true
       require-specific: true
       allow-unused: false
+    tagliatelle:
+      # The Moonraker API is snake_case throughout; response and request structs
+      # mirror it, so JSON tags use snake_case across the project.
+      case:
+        rules:
+          json: snake
     varnamelen:
       max-distance: 5
       min-name-length: 3
