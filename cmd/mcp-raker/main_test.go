@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -140,6 +142,39 @@ func TestRegisterTools_WithAdmin(t *testing.T) {
 	if len(admin) != len(core)+adminToolCount {
 		t.Errorf("admin mode registered %d tools, want %d (core %d + %d admin)",
 			len(admin), len(core)+adminToolCount, len(core), adminToolCount)
+	}
+}
+
+// TestToolOutputSchemasNoBooleanProperty guards against the SDK reflecting an
+// any-typed output field into a bare boolean property schema
+// ("properties":{"x":true}), which strict MCP clients reject and which fails the
+// whole tools/list. It scans every property of every tool's output schema, so a
+// future passthrough field is covered too, not just the current "result" key.
+func TestToolOutputSchemasNoBooleanProperty(t *testing.T) {
+	t.Parallel()
+
+	for name, tool := range listTools(t, true) {
+		if tool.OutputSchema == nil {
+			continue
+		}
+
+		raw, err := json.Marshal(tool.OutputSchema)
+		if err != nil {
+			t.Fatalf("%s: marshal output schema: %v", name, err)
+		}
+
+		var schema struct {
+			Properties map[string]json.RawMessage `json:"properties"`
+		}
+		if err := json.Unmarshal(raw, &schema); err != nil {
+			t.Fatalf("%s: unmarshal output schema: %v", name, err)
+		}
+
+		for prop, propSchema := range schema.Properties {
+			if value := strings.TrimSpace(string(propSchema)); value == "true" || value == "false" {
+				t.Errorf("%s: property %q has a bare boolean schema %s (rejected by strict clients)", name, prop, value)
+			}
+		}
 	}
 }
 

@@ -12,8 +12,15 @@ type NoParams struct{}
 // RawResult carries an arbitrary Moonraker JSON payload for tools that do not
 // need a typed output shape. It mirrors Moonraker's own {"result": ...}
 // envelope so the model sees the response verbatim.
+//
+// The jsonschema tag on Result is load-bearing: without it, the SDK reflects the
+// any-typed field into an empty schema, which marshals to the boolean `true`.
+// A boolean in a property-schema position (`"properties":{"result":true}`) is
+// rejected by strict MCP clients and fails the whole tools/list. The tag gives
+// the field a description, so its schema marshals as a (non-empty, non-boolean)
+// object that still permits any result value.
 type RawResult struct {
-	Result any `json:"result"`
+	Result any `json:"result" jsonschema:"The Moonraker result payload; its shape varies by endpoint"`
 }
 
 // ptrBool returns a pointer to value, for the *bool annotation hint fields.
