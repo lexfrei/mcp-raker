@@ -40,14 +40,14 @@ Admin (require `MOONRAKER_ENABLE_ADMIN=true`):
 
 ## Output
 
-Every tool returns its result as a top-level JSON object — read the fields directly, never through a `result` wrapper. Endpoints that return a bare list upstream wrap it under a descriptive key (`files`, `roots`, `thumbnails`); action tools that only succeed return `{"ok": true}`; and `moonraker_spoolman_proxy` and `moonraker_extensions_request` pass the proxied response through verbatim.
+Every tool returns its result as a top-level JSON object — read the fields directly, never through a `result` wrapper. Endpoints that return a bare list upstream wrap it under a descriptive key (`files`, `roots`, `thumbnails`); action tools that only succeed return `{"ok": true}`; and the verbatim-passthrough tools (`moonraker_spoolman_proxy`, `moonraker_extensions_request`, and `moonraker_mqtt_subscribe`) return the upstream payload unchanged, including a bare scalar or array.
 
 Two reads trim their payload by default to keep an assistant's context small:
 
 - `moonraker_proc_stats` returns the last 5 CPU-history points; pass `samples` for more, or `0` (or less) for the full history.
 - `moonraker_history_list` drops each job's gcode thumbnails; pass `include_thumbnails: true` to keep them.
 
-`moonraker_sensors_list` returns an empty result instead of an error when the printer has no `[sensor]` section configured.
+`moonraker_sensors_list` and `moonraker_sensors_measurements` return an empty result instead of an error when the printer has no `[sensor]` section configured.
 
 The `moonraker_mcp_version` tool reports the running build's version and git revision: stamped from build flags in the container image, and otherwise from the embedded Go build info (so `go install` and local builds self-identify too).
 
