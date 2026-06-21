@@ -18,9 +18,9 @@ func ExtensionsListTool() *mcp.Tool {
 }
 
 // NewExtensionsListHandler creates the handler for moonraker_extensions_list.
-func NewExtensionsListHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Get(ctx, "/server/extensions/list", nil))
+func NewExtensionsListHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Get(ctx, "/server/extensions/list", nil))
 
 		return nil, out, err
 	}
@@ -43,16 +43,18 @@ func ExtensionsRequestTool() *mcp.Tool {
 }
 
 // NewExtensionsRequestHandler creates the handler for moonraker_extensions_request.
-func NewExtensionsRequestHandler(api moonraker.API) mcp.ToolHandlerFor[ExtensionsRequestParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params ExtensionsRequestParams) (*mcp.CallToolResult, RawResult, error) {
+// The agent's response shape is arbitrary, so it passes through unchanged with
+// no output schema.
+func NewExtensionsRequestHandler(api moonraker.API) mcp.ToolHandlerFor[ExtensionsRequestParams, any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params ExtensionsRequestParams) (*mcp.CallToolResult, any, error) {
 		agentErr := requireString("agent", params.Agent)
 		if agentErr != nil {
-			return nil, RawResult{}, agentErr
+			return nil, nil, agentErr
 		}
 
 		methodErr := requireString("method", params.Method)
 		if methodErr != nil {
-			return nil, RawResult{}, methodErr
+			return nil, nil, methodErr
 		}
 
 		body := map[string]any{"agent": params.Agent, "method": params.Method}
@@ -60,7 +62,7 @@ func NewExtensionsRequestHandler(api moonraker.API) mcp.ToolHandlerFor[Extension
 			body["arguments"] = params.Arguments
 		}
 
-		out, err := decodeRaw(api.Post(ctx, "/server/extensions/request", nil, body))
+		out, err := decodePassthrough(api.Post(ctx, "/server/extensions/request", nil, body))
 
 		return nil, out, err
 	}

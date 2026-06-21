@@ -24,9 +24,9 @@ func PowerDevicesTool() *mcp.Tool {
 }
 
 // NewPowerDevicesHandler creates the handler for moonraker_power_devices.
-func NewPowerDevicesHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Get(ctx, "/machine/device_power/devices", nil))
+func NewPowerDevicesHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Get(ctx, "/machine/device_power/devices", nil))
 
 		return nil, out, err
 	}
@@ -42,14 +42,14 @@ func PowerStatusTool() *mcp.Tool {
 }
 
 // NewPowerStatusHandler creates the handler for moonraker_power_status.
-func NewPowerStatusHandler(api moonraker.API) mcp.ToolHandlerFor[PowerDeviceParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params PowerDeviceParams) (*mcp.CallToolResult, RawResult, error) {
+func NewPowerStatusHandler(api moonraker.API) mcp.ToolHandlerFor[PowerDeviceParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params PowerDeviceParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramDevice, params.Device)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
-		out, err := decodeRaw(api.Get(ctx, "/machine/device_power/device", url.Values{paramDevice: {params.Device}}))
+		out, err := decodeResult(api.Get(ctx, "/machine/device_power/device", url.Values{paramDevice: {params.Device}}))
 
 		return nil, out, err
 	}
@@ -73,14 +73,14 @@ func PowerOnTool() *mcp.Tool {
 }
 
 // NewPowerOnHandler creates the handler for moonraker_power_on.
-func NewPowerOnHandler(api moonraker.API) mcp.ToolHandlerFor[PowerDeviceParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params PowerDeviceParams) (*mcp.CallToolResult, RawResult, error) {
+func NewPowerOnHandler(api moonraker.API) mcp.ToolHandlerFor[PowerDeviceParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params PowerDeviceParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramDevice, params.Device)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
-		out, err := decodeRaw(api.Post(ctx, devicePath, nil, powerActionBody(params.Device, "on")))
+		out, err := decodeResult(api.Post(ctx, devicePath, nil, powerActionBody(params.Device, "on")))
 
 		return nil, out, err
 	}
@@ -97,14 +97,14 @@ func PowerOffTool() *mcp.Tool {
 }
 
 // NewPowerOffHandler creates the handler for moonraker_power_off.
-func NewPowerOffHandler(api moonraker.API) mcp.ToolHandlerFor[PowerDeviceParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params PowerDeviceParams) (*mcp.CallToolResult, RawResult, error) {
+func NewPowerOffHandler(api moonraker.API) mcp.ToolHandlerFor[PowerDeviceParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params PowerDeviceParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramDevice, params.Device)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
-		out, err := decodeRaw(api.Post(ctx, devicePath, nil, powerActionBody(params.Device, "off")))
+		out, err := decodeResult(api.Post(ctx, devicePath, nil, powerActionBody(params.Device, "off")))
 
 		return nil, out, err
 	}
@@ -120,14 +120,14 @@ func PowerToggleTool() *mcp.Tool {
 }
 
 // NewPowerToggleHandler creates the handler for moonraker_power_toggle.
-func NewPowerToggleHandler(api moonraker.API) mcp.ToolHandlerFor[PowerDeviceParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params PowerDeviceParams) (*mcp.CallToolResult, RawResult, error) {
+func NewPowerToggleHandler(api moonraker.API) mcp.ToolHandlerFor[PowerDeviceParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params PowerDeviceParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramDevice, params.Device)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
-		out, err := decodeRaw(api.Post(ctx, devicePath, nil, powerActionBody(params.Device, "toggle")))
+		out, err := decodeResult(api.Post(ctx, devicePath, nil, powerActionBody(params.Device, "toggle")))
 
 		return nil, out, err
 	}

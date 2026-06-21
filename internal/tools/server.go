@@ -70,13 +70,13 @@ func ServerConfigTool() *mcp.Tool {
 }
 
 // NewServerConfigHandler creates the handler for moonraker_server_config.
-func NewServerConfigHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
+func NewServerConfigHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
 	return func(
 		ctx context.Context,
 		_ *mcp.CallToolRequest,
 		_ NoParams,
-	) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Get(ctx, "/server/config", nil))
+	) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Get(ctx, "/server/config", nil))
 
 		return nil, out, err
 	}
@@ -98,18 +98,18 @@ func TemperatureStoreTool() *mcp.Tool {
 }
 
 // NewTemperatureStoreHandler creates the handler for moonraker_temperature_store.
-func NewTemperatureStoreHandler(api moonraker.API) mcp.ToolHandlerFor[TemperatureStoreParams, RawResult] {
+func NewTemperatureStoreHandler(api moonraker.API) mcp.ToolHandlerFor[TemperatureStoreParams, map[string]any] {
 	return func(
 		ctx context.Context,
 		_ *mcp.CallToolRequest,
 		params TemperatureStoreParams,
-	) (*mcp.CallToolResult, RawResult, error) {
+	) (*mcp.CallToolResult, map[string]any, error) {
 		query := url.Values{}
 		if params.IncludeMonitors {
 			query.Set("include_monitors", "true")
 		}
 
-		out, err := decodeRaw(api.Get(ctx, "/server/temperature_store", query))
+		out, err := decodeResult(api.Get(ctx, "/server/temperature_store", query))
 
 		return nil, out, err
 	}
@@ -130,18 +130,18 @@ func GcodeStoreTool() *mcp.Tool {
 }
 
 // NewGcodeStoreHandler creates the handler for moonraker_gcode_store.
-func NewGcodeStoreHandler(api moonraker.API) mcp.ToolHandlerFor[GcodeStoreParams, RawResult] {
+func NewGcodeStoreHandler(api moonraker.API) mcp.ToolHandlerFor[GcodeStoreParams, map[string]any] {
 	return func(
 		ctx context.Context,
 		_ *mcp.CallToolRequest,
 		params GcodeStoreParams,
-	) (*mcp.CallToolResult, RawResult, error) {
+	) (*mcp.CallToolResult, map[string]any, error) {
 		query := url.Values{}
 		if params.Count > 0 {
 			query.Set("count", strconv.Itoa(params.Count))
 		}
 
-		out, err := decodeRaw(api.Get(ctx, "/server/gcode_store", query))
+		out, err := decodeResult(api.Get(ctx, "/server/gcode_store", query))
 
 		return nil, out, err
 	}
@@ -162,18 +162,18 @@ func LogsRolloverTool() *mcp.Tool {
 }
 
 // NewLogsRolloverHandler creates the handler for moonraker_logs_rollover.
-func NewLogsRolloverHandler(api moonraker.API) mcp.ToolHandlerFor[LogsRolloverParams, RawResult] {
+func NewLogsRolloverHandler(api moonraker.API) mcp.ToolHandlerFor[LogsRolloverParams, map[string]any] {
 	return func(
 		ctx context.Context,
 		_ *mcp.CallToolRequest,
 		params LogsRolloverParams,
-	) (*mcp.CallToolResult, RawResult, error) {
+	) (*mcp.CallToolResult, map[string]any, error) {
 		query := url.Values{}
 		if params.Application != "" {
 			query.Set("application", params.Application)
 		}
 
-		out, err := decodeRaw(api.Post(ctx, "/server/logs/rollover", query, nil))
+		out, err := decodeResult(api.Post(ctx, "/server/logs/rollover", query, nil))
 
 		return nil, out, err
 	}
@@ -189,13 +189,13 @@ func ServerRestartTool() *mcp.Tool {
 }
 
 // NewServerRestartHandler creates the handler for moonraker_server_restart.
-func NewServerRestartHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
+func NewServerRestartHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
 	return func(
 		ctx context.Context,
 		_ *mcp.CallToolRequest,
 		_ NoParams,
-	) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Post(ctx, "/server/restart", nil, nil))
+	) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Post(ctx, "/server/restart", nil, nil))
 
 		return nil, out, err
 	}

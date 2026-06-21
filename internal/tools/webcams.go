@@ -20,9 +20,9 @@ func WebcamsListTool() *mcp.Tool {
 }
 
 // NewWebcamsListHandler creates the handler for moonraker_webcams_list.
-func NewWebcamsListHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Get(ctx, "/server/webcams/list", nil))
+func NewWebcamsListHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Get(ctx, "/server/webcams/list", nil))
 
 		return nil, out, err
 	}
@@ -43,14 +43,14 @@ func WebcamsGetTool() *mcp.Tool {
 }
 
 // NewWebcamsGetHandler creates the handler for moonraker_webcams_get.
-func NewWebcamsGetHandler(api moonraker.API) mcp.ToolHandlerFor[WebcamNameParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params WebcamNameParams) (*mcp.CallToolResult, RawResult, error) {
+func NewWebcamsGetHandler(api moonraker.API) mcp.ToolHandlerFor[WebcamNameParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params WebcamNameParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramName, params.Name)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
-		out, err := decodeRaw(api.Get(ctx, "/server/webcams/item", url.Values{paramName: {params.Name}}))
+		out, err := decodeResult(api.Get(ctx, "/server/webcams/item", url.Values{paramName: {params.Name}}))
 
 		return nil, out, err
 	}
@@ -72,18 +72,18 @@ func WebcamsAddTool() *mcp.Tool {
 }
 
 // NewWebcamsAddHandler creates the handler for moonraker_webcams_add.
-func NewWebcamsAddHandler(api moonraker.API) mcp.ToolHandlerFor[WebcamsAddParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params WebcamsAddParams) (*mcp.CallToolResult, RawResult, error) {
+func NewWebcamsAddHandler(api moonraker.API) mcp.ToolHandlerFor[WebcamsAddParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params WebcamsAddParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramName, params.Name)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
 		body := make(map[string]any, len(params.Settings)+1)
 		maps.Copy(body, params.Settings)
 		body[paramName] = params.Name
 
-		out, err := decodeRaw(api.Post(ctx, "/server/webcams/item", nil, body))
+		out, err := decodeResult(api.Post(ctx, "/server/webcams/item", nil, body))
 
 		return nil, out, err
 	}
@@ -99,14 +99,14 @@ func WebcamsDeleteTool() *mcp.Tool {
 }
 
 // NewWebcamsDeleteHandler creates the handler for moonraker_webcams_delete.
-func NewWebcamsDeleteHandler(api moonraker.API) mcp.ToolHandlerFor[WebcamNameParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params WebcamNameParams) (*mcp.CallToolResult, RawResult, error) {
+func NewWebcamsDeleteHandler(api moonraker.API) mcp.ToolHandlerFor[WebcamNameParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params WebcamNameParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramName, params.Name)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
-		out, err := decodeRaw(api.Delete(ctx, "/server/webcams/item", url.Values{paramName: {params.Name}}))
+		out, err := decodeResult(api.Delete(ctx, "/server/webcams/item", url.Values{paramName: {params.Name}}))
 
 		return nil, out, err
 	}
@@ -122,14 +122,14 @@ func WebcamsTestTool() *mcp.Tool {
 }
 
 // NewWebcamsTestHandler creates the handler for moonraker_webcams_test.
-func NewWebcamsTestHandler(api moonraker.API) mcp.ToolHandlerFor[WebcamNameParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params WebcamNameParams) (*mcp.CallToolResult, RawResult, error) {
+func NewWebcamsTestHandler(api moonraker.API) mcp.ToolHandlerFor[WebcamNameParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params WebcamNameParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramName, params.Name)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
-		out, err := decodeRaw(api.Post(ctx, "/server/webcams/test", url.Values{paramName: {params.Name}}, nil))
+		out, err := decodeResult(api.Post(ctx, "/server/webcams/test", url.Values{paramName: {params.Name}}, nil))
 
 		return nil, out, err
 	}

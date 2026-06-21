@@ -24,20 +24,20 @@ func PrintStartTool() *mcp.Tool {
 }
 
 // NewPrintStartHandler creates the handler for moonraker_print_start.
-func NewPrintStartHandler(api moonraker.API) mcp.ToolHandlerFor[PrintStartParams, RawResult] {
+func NewPrintStartHandler(api moonraker.API) mcp.ToolHandlerFor[PrintStartParams, map[string]any] {
 	return func(
 		ctx context.Context,
 		_ *mcp.CallToolRequest,
 		params PrintStartParams,
-	) (*mcp.CallToolResult, RawResult, error) {
+	) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramFilename, params.Filename)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
 		query := url.Values{paramFilename: {params.Filename}}
 
-		out, err := decodeRaw(api.Post(ctx, "/printer/print/start", query, nil))
+		out, err := decodeResult(api.Post(ctx, "/printer/print/start", query, nil))
 
 		return nil, out, err
 	}
@@ -53,13 +53,13 @@ func PrintPauseTool() *mcp.Tool {
 }
 
 // NewPrintPauseHandler creates the handler for moonraker_print_pause.
-func NewPrintPauseHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
+func NewPrintPauseHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
 	return func(
 		ctx context.Context,
 		_ *mcp.CallToolRequest,
 		_ NoParams,
-	) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Post(ctx, "/printer/print/pause", nil, nil))
+	) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Post(ctx, "/printer/print/pause", nil, nil))
 
 		return nil, out, err
 	}
@@ -75,13 +75,13 @@ func PrintResumeTool() *mcp.Tool {
 }
 
 // NewPrintResumeHandler creates the handler for moonraker_print_resume.
-func NewPrintResumeHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
+func NewPrintResumeHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
 	return func(
 		ctx context.Context,
 		_ *mcp.CallToolRequest,
 		_ NoParams,
-	) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Post(ctx, "/printer/print/resume", nil, nil))
+	) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Post(ctx, "/printer/print/resume", nil, nil))
 
 		return nil, out, err
 	}
@@ -97,13 +97,13 @@ func PrintCancelTool() *mcp.Tool {
 }
 
 // NewPrintCancelHandler creates the handler for moonraker_print_cancel.
-func NewPrintCancelHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
+func NewPrintCancelHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
 	return func(
 		ctx context.Context,
 		_ *mcp.CallToolRequest,
 		_ NoParams,
-	) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Post(ctx, "/printer/print/cancel", nil, nil))
+	) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Post(ctx, "/printer/print/cancel", nil, nil))
 
 		return nil, out, err
 	}

@@ -24,14 +24,14 @@ func SensorsListTool() *mcp.Tool {
 }
 
 // NewSensorsListHandler creates the handler for moonraker_sensors_list.
-func NewSensorsListHandler(api moonraker.API) mcp.ToolHandlerFor[SensorsListParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params SensorsListParams) (*mcp.CallToolResult, RawResult, error) {
+func NewSensorsListHandler(api moonraker.API) mcp.ToolHandlerFor[SensorsListParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params SensorsListParams) (*mcp.CallToolResult, map[string]any, error) {
 		query := url.Values{}
 		if params.Extended {
 			query.Set("extended", "true")
 		}
 
-		out, err := decodeRaw(api.Get(ctx, "/machine/sensors/list", query))
+		out, err := decodeResult(api.Get(ctx, "/machine/sensors/list", query))
 
 		return nil, out, err
 	}
@@ -52,14 +52,14 @@ func SensorsInfoTool() *mcp.Tool {
 }
 
 // NewSensorsInfoHandler creates the handler for moonraker_sensors_info.
-func NewSensorsInfoHandler(api moonraker.API) mcp.ToolHandlerFor[SensorParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params SensorParams) (*mcp.CallToolResult, RawResult, error) {
+func NewSensorsInfoHandler(api moonraker.API) mcp.ToolHandlerFor[SensorParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params SensorParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramSensor, params.Sensor)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
-		out, err := decodeRaw(api.Get(ctx, "/machine/sensors/info", url.Values{paramSensor: {params.Sensor}}))
+		out, err := decodeResult(api.Get(ctx, "/machine/sensors/info", url.Values{paramSensor: {params.Sensor}}))
 
 		return nil, out, err
 	}
@@ -80,14 +80,14 @@ func SensorsMeasurementsTool() *mcp.Tool {
 }
 
 // NewSensorsMeasurementsHandler creates the handler for moonraker_sensors_measurements.
-func NewSensorsMeasurementsHandler(api moonraker.API) mcp.ToolHandlerFor[SensorsMeasurementsParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params SensorsMeasurementsParams) (*mcp.CallToolResult, RawResult, error) {
+func NewSensorsMeasurementsHandler(api moonraker.API) mcp.ToolHandlerFor[SensorsMeasurementsParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params SensorsMeasurementsParams) (*mcp.CallToolResult, map[string]any, error) {
 		query := url.Values{}
 		if params.Sensor != "" {
 			query.Set(paramSensor, params.Sensor)
 		}
 
-		out, err := decodeRaw(api.Get(ctx, "/machine/sensors/measurements", query))
+		out, err := decodeResult(api.Get(ctx, "/machine/sensors/measurements", query))
 
 		return nil, out, err
 	}

@@ -19,9 +19,9 @@ func SystemInfoTool() *mcp.Tool {
 }
 
 // NewSystemInfoHandler creates the handler for moonraker_system_info.
-func NewSystemInfoHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Get(ctx, "/machine/system_info", nil))
+func NewSystemInfoHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Get(ctx, "/machine/system_info", nil))
 
 		return nil, out, err
 	}
@@ -37,9 +37,9 @@ func ProcStatsTool() *mcp.Tool {
 }
 
 // NewProcStatsHandler creates the handler for moonraker_proc_stats.
-func NewProcStatsHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Get(ctx, "/machine/proc_stats", nil))
+func NewProcStatsHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Get(ctx, "/machine/proc_stats", nil))
 
 		return nil, out, err
 	}
@@ -55,9 +55,9 @@ func SudoInfoTool() *mcp.Tool {
 }
 
 // NewSudoInfoHandler creates the handler for moonraker_sudo_info.
-func NewSudoInfoHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Get(ctx, "/machine/sudo/info", nil))
+func NewSudoInfoHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Get(ctx, "/machine/sudo/info", nil))
 
 		return nil, out, err
 	}
@@ -73,9 +73,9 @@ func PeripheralsUSBTool() *mcp.Tool {
 }
 
 // NewPeripheralsUSBHandler creates the handler for moonraker_peripherals_usb.
-func NewPeripheralsUSBHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Get(ctx, "/machine/peripherals/usb", nil))
+func NewPeripheralsUSBHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Get(ctx, "/machine/peripherals/usb", nil))
 
 		return nil, out, err
 	}
@@ -91,9 +91,9 @@ func PeripheralsSerialTool() *mcp.Tool {
 }
 
 // NewPeripheralsSerialHandler creates the handler for moonraker_peripherals_serial.
-func NewPeripheralsSerialHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Get(ctx, "/machine/peripherals/serial", nil))
+func NewPeripheralsSerialHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Get(ctx, "/machine/peripherals/serial", nil))
 
 		return nil, out, err
 	}
@@ -109,9 +109,9 @@ func PeripheralsVideoTool() *mcp.Tool {
 }
 
 // NewPeripheralsVideoHandler creates the handler for moonraker_peripherals_video.
-func NewPeripheralsVideoHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Get(ctx, "/machine/peripherals/video", nil))
+func NewPeripheralsVideoHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Get(ctx, "/machine/peripherals/video", nil))
 
 		return nil, out, err
 	}
@@ -132,18 +132,18 @@ func PeripheralsCanbusTool() *mcp.Tool {
 }
 
 // NewPeripheralsCanbusHandler creates the handler for moonraker_peripherals_canbus.
-func NewPeripheralsCanbusHandler(api moonraker.API) mcp.ToolHandlerFor[PeripheralsCanbusParams, RawResult] {
+func NewPeripheralsCanbusHandler(api moonraker.API) mcp.ToolHandlerFor[PeripheralsCanbusParams, map[string]any] {
 	return func(
 		ctx context.Context,
 		_ *mcp.CallToolRequest,
 		params PeripheralsCanbusParams,
-	) (*mcp.CallToolResult, RawResult, error) {
+	) (*mcp.CallToolResult, map[string]any, error) {
 		query := url.Values{}
 		if params.Interface != "" {
 			query.Set("interface", params.Interface)
 		}
 
-		out, err := decodeRaw(api.Get(ctx, "/machine/peripherals/canbus", query))
+		out, err := decodeResult(api.Get(ctx, "/machine/peripherals/canbus", query))
 
 		return nil, out, err
 	}
@@ -159,9 +159,9 @@ func MachineShutdownTool() *mcp.Tool {
 }
 
 // NewMachineShutdownHandler creates the handler for moonraker_machine_shutdown.
-func NewMachineShutdownHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Post(ctx, "/machine/shutdown", nil, nil))
+func NewMachineShutdownHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Post(ctx, "/machine/shutdown", nil, nil))
 
 		return nil, out, err
 	}
@@ -177,9 +177,9 @@ func MachineRebootTool() *mcp.Tool {
 }
 
 // NewMachineRebootHandler creates the handler for moonraker_machine_reboot.
-func NewMachineRebootHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Post(ctx, "/machine/reboot", nil, nil))
+func NewMachineRebootHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Post(ctx, "/machine/reboot", nil, nil))
 
 		return nil, out, err
 	}
@@ -200,14 +200,14 @@ func ServiceStartTool() *mcp.Tool {
 }
 
 // NewServiceStartHandler creates the handler for moonraker_service_start.
-func NewServiceStartHandler(api moonraker.API) mcp.ToolHandlerFor[ServiceParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params ServiceParams) (*mcp.CallToolResult, RawResult, error) {
+func NewServiceStartHandler(api moonraker.API) mcp.ToolHandlerFor[ServiceParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params ServiceParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramService, params.Service)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
-		out, err := decodeRaw(api.Post(ctx, "/machine/services/start", url.Values{paramService: {params.Service}}, nil))
+		out, err := decodeResult(api.Post(ctx, "/machine/services/start", url.Values{paramService: {params.Service}}, nil))
 
 		return nil, out, err
 	}
@@ -223,14 +223,14 @@ func ServiceStopTool() *mcp.Tool {
 }
 
 // NewServiceStopHandler creates the handler for moonraker_service_stop.
-func NewServiceStopHandler(api moonraker.API) mcp.ToolHandlerFor[ServiceParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params ServiceParams) (*mcp.CallToolResult, RawResult, error) {
+func NewServiceStopHandler(api moonraker.API) mcp.ToolHandlerFor[ServiceParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params ServiceParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramService, params.Service)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
-		out, err := decodeRaw(api.Post(ctx, "/machine/services/stop", url.Values{paramService: {params.Service}}, nil))
+		out, err := decodeResult(api.Post(ctx, "/machine/services/stop", url.Values{paramService: {params.Service}}, nil))
 
 		return nil, out, err
 	}
@@ -246,14 +246,14 @@ func ServiceRestartTool() *mcp.Tool {
 }
 
 // NewServiceRestartHandler creates the handler for moonraker_service_restart.
-func NewServiceRestartHandler(api moonraker.API) mcp.ToolHandlerFor[ServiceParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params ServiceParams) (*mcp.CallToolResult, RawResult, error) {
+func NewServiceRestartHandler(api moonraker.API) mcp.ToolHandlerFor[ServiceParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params ServiceParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramService, params.Service)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
-		out, err := decodeRaw(api.Post(ctx, "/machine/services/restart", url.Values{paramService: {params.Service}}, nil))
+		out, err := decodeResult(api.Post(ctx, "/machine/services/restart", url.Values{paramService: {params.Service}}, nil))
 
 		return nil, out, err
 	}
@@ -274,18 +274,18 @@ func SudoPasswordTool() *mcp.Tool {
 }
 
 // NewSudoPasswordHandler creates the handler for moonraker_sudo_password.
-func NewSudoPasswordHandler(api moonraker.API) mcp.ToolHandlerFor[SudoPasswordParams, RawResult] {
+func NewSudoPasswordHandler(api moonraker.API) mcp.ToolHandlerFor[SudoPasswordParams, map[string]any] {
 	return func(
 		ctx context.Context,
 		_ *mcp.CallToolRequest,
 		params SudoPasswordParams,
-	) (*mcp.CallToolResult, RawResult, error) {
+	) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramPassword, params.Password)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
-		out, err := decodeRaw(api.Post(ctx, "/machine/sudo/password", nil, map[string]any{paramPassword: params.Password}))
+		out, err := decodeResult(api.Post(ctx, "/machine/sudo/password", nil, map[string]any{paramPassword: params.Password}))
 
 		return nil, out, err
 	}

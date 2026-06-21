@@ -22,9 +22,9 @@ func JobQueueStatusTool() *mcp.Tool {
 }
 
 // NewJobQueueStatusHandler creates the handler for moonraker_jobqueue_status.
-func NewJobQueueStatusHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Get(ctx, "/server/job_queue/status", nil))
+func NewJobQueueStatusHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Get(ctx, "/server/job_queue/status", nil))
 
 		return nil, out, err
 	}
@@ -46,16 +46,16 @@ func JobQueueEnqueueTool() *mcp.Tool {
 }
 
 // NewJobQueueEnqueueHandler creates the handler for moonraker_jobqueue_enqueue.
-func NewJobQueueEnqueueHandler(api moonraker.API) mcp.ToolHandlerFor[JobQueueEnqueueParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params JobQueueEnqueueParams) (*mcp.CallToolResult, RawResult, error) {
+func NewJobQueueEnqueueHandler(api moonraker.API) mcp.ToolHandlerFor[JobQueueEnqueueParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params JobQueueEnqueueParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requirePresent("filenames", len(params.Filenames))
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
 		body := map[string]any{"filenames": params.Filenames, "reset": params.Reset}
 
-		out, err := decodeRaw(api.Post(ctx, "/server/job_queue/job", nil, body))
+		out, err := decodeResult(api.Post(ctx, "/server/job_queue/job", nil, body))
 
 		return nil, out, err
 	}
@@ -77,14 +77,14 @@ func JobQueueRemoveTool() *mcp.Tool {
 }
 
 // NewJobQueueRemoveHandler creates the handler for moonraker_jobqueue_remove.
-func NewJobQueueRemoveHandler(api moonraker.API) mcp.ToolHandlerFor[JobQueueRemoveParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params JobQueueRemoveParams) (*mcp.CallToolResult, RawResult, error) {
+func NewJobQueueRemoveHandler(api moonraker.API) mcp.ToolHandlerFor[JobQueueRemoveParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params JobQueueRemoveParams) (*mcp.CallToolResult, map[string]any, error) {
 		if len(params.JobIDs) > 0 && params.All {
-			return nil, RawResult{}, mutuallyExclusive(jobIDsKey, "all")
+			return nil, map[string]any{}, mutuallyExclusive(jobIDsKey, "all")
 		}
 
 		if len(params.JobIDs) == 0 && !params.All {
-			return nil, RawResult{}, requirePresent(jobIDsKey, len(params.JobIDs))
+			return nil, map[string]any{}, requirePresent(jobIDsKey, len(params.JobIDs))
 		}
 
 		query := url.Values{}
@@ -96,7 +96,7 @@ func NewJobQueueRemoveHandler(api moonraker.API) mcp.ToolHandlerFor[JobQueueRemo
 			}
 		}
 
-		out, err := decodeRaw(api.Delete(ctx, "/server/job_queue/job", query))
+		out, err := decodeResult(api.Delete(ctx, "/server/job_queue/job", query))
 
 		return nil, out, err
 	}
@@ -112,9 +112,9 @@ func JobQueuePauseTool() *mcp.Tool {
 }
 
 // NewJobQueuePauseHandler creates the handler for moonraker_jobqueue_pause.
-func NewJobQueuePauseHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Post(ctx, "/server/job_queue/pause", nil, nil))
+func NewJobQueuePauseHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Post(ctx, "/server/job_queue/pause", nil, nil))
 
 		return nil, out, err
 	}
@@ -130,9 +130,9 @@ func JobQueueStartTool() *mcp.Tool {
 }
 
 // NewJobQueueStartHandler creates the handler for moonraker_jobqueue_start.
-func NewJobQueueStartHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Post(ctx, "/server/job_queue/start", nil, nil))
+func NewJobQueueStartHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Post(ctx, "/server/job_queue/start", nil, nil))
 
 		return nil, out, err
 	}
@@ -153,14 +153,14 @@ func JobQueueJumpTool() *mcp.Tool {
 }
 
 // NewJobQueueJumpHandler creates the handler for moonraker_jobqueue_jump.
-func NewJobQueueJumpHandler(api moonraker.API) mcp.ToolHandlerFor[JobQueueJumpParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params JobQueueJumpParams) (*mcp.CallToolResult, RawResult, error) {
+func NewJobQueueJumpHandler(api moonraker.API) mcp.ToolHandlerFor[JobQueueJumpParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params JobQueueJumpParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramJobID, params.JobID)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
-		out, err := decodeRaw(api.Post(ctx, "/server/job_queue/jump", url.Values{paramJobID: {params.JobID}}, nil))
+		out, err := decodeResult(api.Post(ctx, "/server/job_queue/jump", url.Values{paramJobID: {params.JobID}}, nil))
 
 		return nil, out, err
 	}

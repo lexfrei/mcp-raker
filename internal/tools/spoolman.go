@@ -18,9 +18,9 @@ func SpoolmanStatusTool() *mcp.Tool {
 }
 
 // NewSpoolmanStatusHandler creates the handler for moonraker_spoolman_status.
-func NewSpoolmanStatusHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Get(ctx, "/server/spoolman/status", nil))
+func NewSpoolmanStatusHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Get(ctx, "/server/spoolman/status", nil))
 
 		return nil, out, err
 	}
@@ -36,9 +36,9 @@ func SpoolmanGetSpoolTool() *mcp.Tool {
 }
 
 // NewSpoolmanGetSpoolHandler creates the handler for moonraker_spoolman_get_spool.
-func NewSpoolmanGetSpoolHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Get(ctx, "/server/spoolman/spool_id", nil))
+func NewSpoolmanGetSpoolHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Get(ctx, "/server/spoolman/spool_id", nil))
 
 		return nil, out, err
 	}
@@ -59,14 +59,14 @@ func SpoolmanSetSpoolTool() *mcp.Tool {
 }
 
 // NewSpoolmanSetSpoolHandler creates the handler for moonraker_spoolman_set_spool.
-func NewSpoolmanSetSpoolHandler(api moonraker.API) mcp.ToolHandlerFor[SpoolmanSetSpoolParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params SpoolmanSetSpoolParams) (*mcp.CallToolResult, RawResult, error) {
+func NewSpoolmanSetSpoolHandler(api moonraker.API) mcp.ToolHandlerFor[SpoolmanSetSpoolParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params SpoolmanSetSpoolParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requirePositive("spool_id", params.SpoolID)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
-		out, err := decodeRaw(api.Post(ctx, "/server/spoolman/spool_id", nil, map[string]any{"spool_id": params.SpoolID}))
+		out, err := decodeResult(api.Post(ctx, "/server/spoolman/spool_id", nil, map[string]any{"spool_id": params.SpoolID}))
 
 		return nil, out, err
 	}
@@ -91,16 +91,18 @@ func SpoolmanProxyTool() *mcp.Tool {
 }
 
 // NewSpoolmanProxyHandler creates the handler for moonraker_spoolman_proxy.
-func NewSpoolmanProxyHandler(api moonraker.API) mcp.ToolHandlerFor[SpoolmanProxyParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params SpoolmanProxyParams) (*mcp.CallToolResult, RawResult, error) {
+// The proxied response shape varies by request, so it passes through unchanged
+// with no output schema.
+func NewSpoolmanProxyHandler(api moonraker.API) mcp.ToolHandlerFor[SpoolmanProxyParams, any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params SpoolmanProxyParams) (*mcp.CallToolResult, any, error) {
 		methodErr := requireString("request_method", params.RequestMethod)
 		if methodErr != nil {
-			return nil, RawResult{}, methodErr
+			return nil, nil, methodErr
 		}
 
 		pathErr := requireString(paramPath, params.Path)
 		if pathErr != nil {
-			return nil, RawResult{}, pathErr
+			return nil, nil, pathErr
 		}
 
 		body := map[string]any{
@@ -116,7 +118,7 @@ func NewSpoolmanProxyHandler(api moonraker.API) mcp.ToolHandlerFor[SpoolmanProxy
 			body["body"] = params.Body
 		}
 
-		out, err := decodeRaw(api.Post(ctx, "/server/spoolman/proxy", nil, body))
+		out, err := decodePassthrough(api.Post(ctx, "/server/spoolman/proxy", nil, body))
 
 		return nil, out, err
 	}

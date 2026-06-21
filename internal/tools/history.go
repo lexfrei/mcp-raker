@@ -29,8 +29,8 @@ func HistoryListTool() *mcp.Tool {
 }
 
 // NewHistoryListHandler creates the handler for moonraker_history_list.
-func NewHistoryListHandler(api moonraker.API) mcp.ToolHandlerFor[HistoryListParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params HistoryListParams) (*mcp.CallToolResult, RawResult, error) {
+func NewHistoryListHandler(api moonraker.API) mcp.ToolHandlerFor[HistoryListParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params HistoryListParams) (*mcp.CallToolResult, map[string]any, error) {
 		query := url.Values{}
 		if params.Limit > 0 {
 			query.Set("limit", strconv.Itoa(params.Limit))
@@ -52,7 +52,7 @@ func NewHistoryListHandler(api moonraker.API) mcp.ToolHandlerFor[HistoryListPara
 			query.Set("order", params.Order)
 		}
 
-		out, err := decodeRaw(api.Get(ctx, "/server/history/list", query))
+		out, err := decodeResult(api.Get(ctx, "/server/history/list", query))
 
 		return nil, out, err
 	}
@@ -68,9 +68,9 @@ func HistoryTotalsTool() *mcp.Tool {
 }
 
 // NewHistoryTotalsHandler creates the handler for moonraker_history_totals.
-func NewHistoryTotalsHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Get(ctx, "/server/history/totals", nil))
+func NewHistoryTotalsHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Get(ctx, "/server/history/totals", nil))
 
 		return nil, out, err
 	}
@@ -91,14 +91,14 @@ func HistoryJobTool() *mcp.Tool {
 }
 
 // NewHistoryJobHandler creates the handler for moonraker_history_job.
-func NewHistoryJobHandler(api moonraker.API) mcp.ToolHandlerFor[HistoryJobParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params HistoryJobParams) (*mcp.CallToolResult, RawResult, error) {
+func NewHistoryJobHandler(api moonraker.API) mcp.ToolHandlerFor[HistoryJobParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params HistoryJobParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramUID, params.UID)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
-		out, err := decodeRaw(api.Get(ctx, "/server/history/job", url.Values{paramUID: {params.UID}}))
+		out, err := decodeResult(api.Get(ctx, "/server/history/job", url.Values{paramUID: {params.UID}}))
 
 		return nil, out, err
 	}
@@ -114,9 +114,9 @@ func HistoryResetTotalsTool() *mcp.Tool {
 }
 
 // NewHistoryResetTotalsHandler creates the handler for moonraker_history_reset_totals.
-func NewHistoryResetTotalsHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Post(ctx, "/server/history/reset_totals", nil, nil))
+func NewHistoryResetTotalsHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Post(ctx, "/server/history/reset_totals", nil, nil))
 
 		return nil, out, err
 	}
@@ -138,14 +138,14 @@ func HistoryDeleteJobTool() *mcp.Tool {
 }
 
 // NewHistoryDeleteJobHandler creates the handler for moonraker_history_delete_job.
-func NewHistoryDeleteJobHandler(api moonraker.API) mcp.ToolHandlerFor[HistoryDeleteJobParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params HistoryDeleteJobParams) (*mcp.CallToolResult, RawResult, error) {
+func NewHistoryDeleteJobHandler(api moonraker.API) mcp.ToolHandlerFor[HistoryDeleteJobParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params HistoryDeleteJobParams) (*mcp.CallToolResult, map[string]any, error) {
 		if params.UID != "" && params.All {
-			return nil, RawResult{}, mutuallyExclusive(paramUID, "all")
+			return nil, map[string]any{}, mutuallyExclusive(paramUID, "all")
 		}
 
 		if params.UID == "" && !params.All {
-			return nil, RawResult{}, requireString(paramUID, params.UID)
+			return nil, map[string]any{}, requireString(paramUID, params.UID)
 		}
 
 		query := url.Values{}
@@ -155,7 +155,7 @@ func NewHistoryDeleteJobHandler(api moonraker.API) mcp.ToolHandlerFor[HistoryDel
 			query.Set(paramUID, params.UID)
 		}
 
-		out, err := decodeRaw(api.Delete(ctx, "/server/history/job", query))
+		out, err := decodeResult(api.Delete(ctx, "/server/history/job", query))
 
 		return nil, out, err
 	}

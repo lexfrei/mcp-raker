@@ -25,14 +25,14 @@ func AnnouncementsListTool() *mcp.Tool {
 }
 
 // NewAnnouncementsListHandler creates the handler for moonraker_announcements_list.
-func NewAnnouncementsListHandler(api moonraker.API) mcp.ToolHandlerFor[AnnouncementsListParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params AnnouncementsListParams) (*mcp.CallToolResult, RawResult, error) {
+func NewAnnouncementsListHandler(api moonraker.API) mcp.ToolHandlerFor[AnnouncementsListParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params AnnouncementsListParams) (*mcp.CallToolResult, map[string]any, error) {
 		query := url.Values{}
 		if params.IncludeDismissed {
 			query.Set("include_dismissed", "true")
 		}
 
-		out, err := decodeRaw(api.Get(ctx, "/server/announcements/list", query))
+		out, err := decodeResult(api.Get(ctx, "/server/announcements/list", query))
 
 		return nil, out, err
 	}
@@ -48,9 +48,9 @@ func AnnouncementsUpdateTool() *mcp.Tool {
 }
 
 // NewAnnouncementsUpdateHandler creates the handler for moonraker_announcements_update.
-func NewAnnouncementsUpdateHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Post(ctx, "/server/announcements/update", nil, nil))
+func NewAnnouncementsUpdateHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Post(ctx, "/server/announcements/update", nil, nil))
 
 		return nil, out, err
 	}
@@ -72,11 +72,11 @@ func AnnouncementsDismissTool() *mcp.Tool {
 }
 
 // NewAnnouncementsDismissHandler creates the handler for moonraker_announcements_dismiss.
-func NewAnnouncementsDismissHandler(api moonraker.API) mcp.ToolHandlerFor[AnnouncementsDismissParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params AnnouncementsDismissParams) (*mcp.CallToolResult, RawResult, error) {
+func NewAnnouncementsDismissHandler(api moonraker.API) mcp.ToolHandlerFor[AnnouncementsDismissParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params AnnouncementsDismissParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramEntryID, params.EntryID)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
 		query := url.Values{paramEntryID: {params.EntryID}}
@@ -84,7 +84,7 @@ func NewAnnouncementsDismissHandler(api moonraker.API) mcp.ToolHandlerFor[Announ
 			query.Set("wake_time", strconv.Itoa(params.WakeTime))
 		}
 
-		out, err := decodeRaw(api.Post(ctx, "/server/announcements/dismiss", query, nil))
+		out, err := decodeResult(api.Post(ctx, "/server/announcements/dismiss", query, nil))
 
 		return nil, out, err
 	}
@@ -100,9 +100,9 @@ func AnnouncementsFeedsTool() *mcp.Tool {
 }
 
 // NewAnnouncementsFeedsHandler creates the handler for moonraker_announcements_feeds.
-func NewAnnouncementsFeedsHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Get(ctx, "/server/announcements/feeds", nil))
+func NewAnnouncementsFeedsHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Get(ctx, "/server/announcements/feeds", nil))
 
 		return nil, out, err
 	}
@@ -123,14 +123,14 @@ func AnnouncementsAddFeedTool() *mcp.Tool {
 }
 
 // NewAnnouncementsAddFeedHandler creates the handler for moonraker_announcements_add_feed.
-func NewAnnouncementsAddFeedHandler(api moonraker.API) mcp.ToolHandlerFor[FeedParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params FeedParams) (*mcp.CallToolResult, RawResult, error) {
+func NewAnnouncementsAddFeedHandler(api moonraker.API) mcp.ToolHandlerFor[FeedParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params FeedParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramName, params.Name)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
-		out, err := decodeRaw(api.Post(ctx, "/server/announcements/feed", url.Values{paramName: {params.Name}}, nil))
+		out, err := decodeResult(api.Post(ctx, "/server/announcements/feed", url.Values{paramName: {params.Name}}, nil))
 
 		return nil, out, err
 	}
@@ -146,14 +146,14 @@ func AnnouncementsRemoveFeedTool() *mcp.Tool {
 }
 
 // NewAnnouncementsRemoveFeedHandler creates the handler for moonraker_announcements_remove_feed.
-func NewAnnouncementsRemoveFeedHandler(api moonraker.API) mcp.ToolHandlerFor[FeedParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params FeedParams) (*mcp.CallToolResult, RawResult, error) {
+func NewAnnouncementsRemoveFeedHandler(api moonraker.API) mcp.ToolHandlerFor[FeedParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params FeedParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramName, params.Name)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
-		out, err := decodeRaw(api.Delete(ctx, "/server/announcements/feed", url.Values{paramName: {params.Name}}))
+		out, err := decodeResult(api.Delete(ctx, "/server/announcements/feed", url.Values{paramName: {params.Name}}))
 
 		return nil, out, err
 	}

@@ -25,9 +25,9 @@ func WLEDStripsTool() *mcp.Tool {
 }
 
 // NewWLEDStripsHandler creates the handler for moonraker_wled_strips.
-func NewWLEDStripsHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Get(ctx, "/machine/wled/strips", nil))
+func NewWLEDStripsHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Get(ctx, "/machine/wled/strips", nil))
 
 		return nil, out, err
 	}
@@ -43,14 +43,14 @@ func WLEDStatusTool() *mcp.Tool {
 }
 
 // NewWLEDStatusHandler creates the handler for moonraker_wled_status.
-func NewWLEDStatusHandler(api moonraker.API) mcp.ToolHandlerFor[StripParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params StripParams) (*mcp.CallToolResult, RawResult, error) {
+func NewWLEDStatusHandler(api moonraker.API) mcp.ToolHandlerFor[StripParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params StripParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramStrip, params.Strip)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
-		out, err := decodeRaw(api.Get(ctx, "/machine/wled/status", url.Values{paramStrip: {params.Strip}}))
+		out, err := decodeResult(api.Get(ctx, "/machine/wled/status", url.Values{paramStrip: {params.Strip}}))
 
 		return nil, out, err
 	}
@@ -66,14 +66,14 @@ func WLEDOnTool() *mcp.Tool {
 }
 
 // NewWLEDOnHandler creates the handler for moonraker_wled_on.
-func NewWLEDOnHandler(api moonraker.API) mcp.ToolHandlerFor[StripParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params StripParams) (*mcp.CallToolResult, RawResult, error) {
+func NewWLEDOnHandler(api moonraker.API) mcp.ToolHandlerFor[StripParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params StripParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramStrip, params.Strip)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
-		out, err := decodeRaw(api.Post(ctx, "/machine/wled/on", url.Values{paramStrip: {params.Strip}}, nil))
+		out, err := decodeResult(api.Post(ctx, "/machine/wled/on", url.Values{paramStrip: {params.Strip}}, nil))
 
 		return nil, out, err
 	}
@@ -89,14 +89,14 @@ func WLEDOffTool() *mcp.Tool {
 }
 
 // NewWLEDOffHandler creates the handler for moonraker_wled_off.
-func NewWLEDOffHandler(api moonraker.API) mcp.ToolHandlerFor[StripParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params StripParams) (*mcp.CallToolResult, RawResult, error) {
+func NewWLEDOffHandler(api moonraker.API) mcp.ToolHandlerFor[StripParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params StripParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramStrip, params.Strip)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
-		out, err := decodeRaw(api.Post(ctx, "/machine/wled/off", url.Values{paramStrip: {params.Strip}}, nil))
+		out, err := decodeResult(api.Post(ctx, "/machine/wled/off", url.Values{paramStrip: {params.Strip}}, nil))
 
 		return nil, out, err
 	}
@@ -112,14 +112,14 @@ func WLEDToggleTool() *mcp.Tool {
 }
 
 // NewWLEDToggleHandler creates the handler for moonraker_wled_toggle.
-func NewWLEDToggleHandler(api moonraker.API) mcp.ToolHandlerFor[StripParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params StripParams) (*mcp.CallToolResult, RawResult, error) {
+func NewWLEDToggleHandler(api moonraker.API) mcp.ToolHandlerFor[StripParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params StripParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramStrip, params.Strip)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
-		out, err := decodeRaw(api.Post(ctx, "/machine/wled/toggle", url.Values{paramStrip: {params.Strip}}, nil))
+		out, err := decodeResult(api.Post(ctx, "/machine/wled/toggle", url.Values{paramStrip: {params.Strip}}, nil))
 
 		return nil, out, err
 	}
@@ -182,16 +182,16 @@ func validateWLEDRanges(params WLEDSetParams) error {
 }
 
 // NewWLEDSetHandler creates the handler for moonraker_wled_set.
-func NewWLEDSetHandler(api moonraker.API) mcp.ToolHandlerFor[WLEDSetParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params WLEDSetParams) (*mcp.CallToolResult, RawResult, error) {
+func NewWLEDSetHandler(api moonraker.API) mcp.ToolHandlerFor[WLEDSetParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params WLEDSetParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramStrip, params.Strip)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
 		rangeErr := validateWLEDRanges(params)
 		if rangeErr != nil {
-			return nil, RawResult{}, rangeErr
+			return nil, map[string]any{}, rangeErr
 		}
 
 		query := url.Values{paramStrip: {params.Strip}}
@@ -200,7 +200,7 @@ func NewWLEDSetHandler(api moonraker.API) mcp.ToolHandlerFor[WLEDSetParams, RawR
 		setIntPtr(query, "intensity", params.Intensity)
 		setIntPtr(query, "speed", params.Speed)
 
-		out, err := decodeRaw(api.Post(ctx, "/machine/wled/strip", query, nil))
+		out, err := decodeResult(api.Post(ctx, "/machine/wled/strip", query, nil))
 
 		return nil, out, err
 	}

@@ -35,16 +35,16 @@ func MQTTPublishTool() *mcp.Tool {
 }
 
 // NewMQTTPublishHandler creates the handler for moonraker_mqtt_publish.
-func NewMQTTPublishHandler(api moonraker.API) mcp.ToolHandlerFor[MQTTPublishParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params MQTTPublishParams) (*mcp.CallToolResult, RawResult, error) {
+func NewMQTTPublishHandler(api moonraker.API) mcp.ToolHandlerFor[MQTTPublishParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params MQTTPublishParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(mqttTopic, params.Topic)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
 		qosErr := requireRange("qos", params.QOS, qosMin, qosMax)
 		if qosErr != nil {
-			return nil, RawResult{}, qosErr
+			return nil, map[string]any{}, qosErr
 		}
 
 		body := map[string]any{
@@ -54,7 +54,7 @@ func NewMQTTPublishHandler(api moonraker.API) mcp.ToolHandlerFor[MQTTPublishPara
 			"retain":  params.Retain,
 		}
 
-		out, err := decodeRaw(api.Post(ctx, "/server/mqtt/publish", nil, body))
+		out, err := decodeResult(api.Post(ctx, "/server/mqtt/publish", nil, body))
 
 		return nil, out, err
 	}
@@ -77,21 +77,21 @@ func MQTTSubscribeTool() *mcp.Tool {
 }
 
 // NewMQTTSubscribeHandler creates the handler for moonraker_mqtt_subscribe.
-func NewMQTTSubscribeHandler(api moonraker.API) mcp.ToolHandlerFor[MQTTSubscribeParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params MQTTSubscribeParams) (*mcp.CallToolResult, RawResult, error) {
+func NewMQTTSubscribeHandler(api moonraker.API) mcp.ToolHandlerFor[MQTTSubscribeParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params MQTTSubscribeParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(mqttTopic, params.Topic)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
 		qosErr := requireRange("qos", params.QOS, qosMin, qosMax)
 		if qosErr != nil {
-			return nil, RawResult{}, qosErr
+			return nil, map[string]any{}, qosErr
 		}
 
 		body := map[string]any{mqttTopic: params.Topic, "qos": params.QOS, "timeout": params.Timeout}
 
-		out, err := decodeRaw(api.Post(ctx, "/server/mqtt/subscribe", nil, body))
+		out, err := decodeResult(api.Post(ctx, "/server/mqtt/subscribe", nil, body))
 
 		return nil, out, err
 	}
