@@ -100,6 +100,13 @@ func decodePassthrough(raw json.RawMessage, err error) (any, error) {
 		return nil, moonrakerErr("decode response", unErr)
 	}
 
+	if value == nil {
+		// The body was a literal JSON null. Return it as raw bytes rather than a
+		// nil interface, which the SDK would drop as "no result"; this keeps the
+		// proxy pass-through verbatim.
+		return raw, nil
+	}
+
 	return value, nil
 }
 
