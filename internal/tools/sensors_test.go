@@ -59,6 +59,21 @@ func TestSensorsList_PropagatesOtherErrors(t *testing.T) {
 	}
 }
 
+func TestSensorsMeasurements_GracefulOnNotFound(t *testing.T) {
+	t.Parallel()
+
+	mock := &mockAPI{err: moonraker.ErrNotFound}
+
+	_, out, err := tools.NewSensorsMeasurementsHandler(mock)(t.Context(), nil, tools.SensorsMeasurementsParams{})
+	if err != nil {
+		t.Fatalf("handler should not error on 404: %v", err)
+	}
+
+	if len(out) != 0 {
+		t.Errorf("out = %v, want an empty measurements object", out)
+	}
+}
+
 func TestSensorsInfo_RequiresSensor(t *testing.T) {
 	t.Parallel()
 

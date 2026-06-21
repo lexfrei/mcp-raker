@@ -96,7 +96,15 @@ func NewSensorsMeasurementsHandler(api moonraker.API) mcp.ToolHandlerFor[Sensors
 			query.Set(paramSensor, params.Sensor)
 		}
 
-		out, err := decodeResult(api.Get(ctx, "/machine/sensors/measurements", query))
+		raw, reqErr := api.Get(ctx, "/machine/sensors/measurements", query)
+
+		// Like sensors_list, the endpoint 404s when no [sensor] section exists.
+		// Measurements are keyed by sensor name, so "none configured" is {}.
+		if errors.Is(reqErr, moonraker.ErrNotFound) {
+			return nil, map[string]any{}, nil
+		}
+
+		out, err := decodeResult(raw, reqErr)
 
 		return nil, out, err
 	}
