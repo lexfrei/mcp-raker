@@ -13,6 +13,7 @@ An MCP server for [Moonraker](https://moonraker.readthedocs.io/), the API server
 - Works against an unauthenticated printer on a trusted LAN out of the box; supports an API key or a username/password JWT login when the printer requires it.
 - Destructive OS, service, update, and user-management tools are gated behind a flag and disabled by default.
 - Tools carry read-only, write, and destructive annotations so clients can warn before acting.
+- Predictable output: every tool returns its data as a top-level JSON object, with no per-tool envelope to unwrap.
 - Ships as a small, signed, multi-arch container image.
 
 ## Tools
@@ -22,7 +23,7 @@ Tools are named `moonraker_*`. The everyday set is always available; the destruc
 Always available:
 
 - **Status**: server info and config, printer info, object list and query, endstops, temperature and G-code stores.
-- **Printing**: start, pause, resume, and cancel prints; run G-code; emergency stop.
+- **Printing**: start, pause, resume, and cancel prints; run G-code; emergency stop; restart Klipper and the firmware.
 - **Files**: list, browse, metadata, thumbnails, create/delete directories, move, copy, zip, download, upload, delete.
 - **History and queue**: list and inspect jobs, totals, and the job queue (enqueue, remove, pause, start, jump).
 - **Machine**: system info, process stats, peripherals; power devices; sensors; WLED.
@@ -34,8 +35,21 @@ Admin (require `MOONRAKER_ENABLE_ADMIN=true`):
 
 - OS shutdown and reboot, systemd service control, sudo password.
 - The update manager (refresh, upgrade, recover, rollback).
-- Server, Klipper, and firmware restart; log rollover.
+- Moonraker server restart and log rollover. (Klipper and firmware restart are not gated — they are printer actions, listed under Printing above.)
 - User management and API-key regeneration.
+
+## Output
+
+Every tool returns its result as a top-level JSON object — read the fields directly, never through a `result` wrapper. Endpoints that return a bare list upstream wrap it under a descriptive key (`files`, `roots`, `thumbnails`); action tools that only succeed return `{"ok": true}`; and `moonraker_spoolman_proxy` and `moonraker_extensions_request` pass the proxied response through verbatim.
+
+Two reads trim their payload by default to keep an assistant's context small:
+
+- `moonraker_proc_stats` returns the last 5 CPU-history points; pass `samples` for more, or `0` for the full history.
+- `moonraker_history_list` drops each job's gcode thumbnails; pass `include_thumbnails: true` to keep them.
+
+`moonraker_sensors_list` returns an empty result instead of an error when the printer has no `[sensor]` section configured.
+
+The `moonraker_mcp_version` tool reports the running build's version and git revision: stamped from build flags in the container image, and otherwise from the embedded Go build info (so `go install` and local builds self-identify too).
 
 ## Authentication
 
