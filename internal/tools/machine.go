@@ -27,6 +27,18 @@ func NewSystemInfoHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[st
 	}
 }
 
+// defaultProcStatsSamples is the number of recent CPU history points returned
+// when the caller does not request a specific count. The full history (~30
+// points) bloats an LLM's context; the latest few are usually what is wanted.
+const defaultProcStatsSamples = 5
+
+// ProcStatsParams defines the parameters for moonraker_proc_stats.
+type ProcStatsParams struct {
+	// Samples is a pointer so an omitted value (nil) can be told apart from an
+	// explicit 0: omit for the last few points, 0 for the full history.
+	Samples *int `json:"samples,omitempty" jsonschema:"How many recent CPU history points to return; omit for the last 5, 0 for the full history"`
+}
+
 // ProcStatsTool returns the definition for moonraker_proc_stats.
 func ProcStatsTool() *mcp.Tool {
 	return &mcp.Tool{
@@ -37,12 +49,42 @@ func ProcStatsTool() *mcp.Tool {
 }
 
 // NewProcStatsHandler creates the handler for moonraker_proc_stats.
-func NewProcStatsHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, map[string]any, error) {
+func NewProcStatsHandler(api moonraker.API) mcp.ToolHandlerFor[ProcStatsParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params ProcStatsParams) (*mcp.CallToolResult, map[string]any, error) {
 		out, err := decodeResult(api.Get(ctx, "/machine/proc_stats", nil))
+		if err != nil {
+			return nil, out, err
+		}
 
-		return nil, out, err
+		trimProcStats(out, procStatsLimit(params.Samples))
+
+		return nil, out, nil
 	}
+}
+
+// procStatsLimit resolves the requested sample count: nil uses the default, and
+// any value <= 0 means the full history.
+func procStatsLimit(samples *int) int {
+	if samples == nil {
+		return defaultProcStatsSamples
+	}
+
+	return *samples
+}
+
+// trimProcStats keeps only the last limit points of the moonraker_stats history.
+// A limit <= 0, a missing array, or an array already within the limit is a no-op.
+func trimProcStats(out map[string]any, limit int) {
+	if limit <= 0 {
+		return
+	}
+
+	stats, ok := out["moonraker_stats"].([]any)
+	if !ok || len(stats) <= limit {
+		return
+	}
+
+	out["moonraker_stats"] = stats[len(stats)-limit:]
 }
 
 // SudoInfoTool returns the definition for moonraker_sudo_info.
