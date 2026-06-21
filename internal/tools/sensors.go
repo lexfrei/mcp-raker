@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/url"
 
+	"github.com/cockroachdb/errors"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
 	"github.com/lexfrei/mcp-raker/internal/moonraker"
@@ -31,7 +32,15 @@ func NewSensorsListHandler(api moonraker.API) mcp.ToolHandlerFor[SensorsListPara
 			query.Set("extended", "true")
 		}
 
-		out, err := decodeResult(api.Get(ctx, "/machine/sensors/list", query))
+		raw, reqErr := api.Get(ctx, "/machine/sensors/list", query)
+
+		// Moonraker replies 404 when no [sensor] section is configured. Treat that
+		// as "no sensors" rather than an error, so the common case reads cleanly.
+		if errors.Is(reqErr, moonraker.ErrNotFound) {
+			return nil, map[string]any{"sensors": map[string]any{}}, nil
+		}
+
+		out, err := decodeResult(raw, reqErr)
 
 		return nil, out, err
 	}

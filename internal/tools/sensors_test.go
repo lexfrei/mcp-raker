@@ -5,6 +5,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 
+	"github.com/lexfrei/mcp-raker/internal/moonraker"
 	"github.com/lexfrei/mcp-raker/internal/tools"
 )
 
@@ -22,6 +23,39 @@ func TestSensorsList_Extended(t *testing.T) {
 
 	if mock.lastQuery.Get("extended") != queryTrue {
 		t.Errorf("extended = %q, want true", mock.lastQuery.Get("extended"))
+	}
+}
+
+func TestSensorsList_GracefulOnNotFound(t *testing.T) {
+	t.Parallel()
+
+	// Moonraker returns 404 when no [sensor] section is configured. The tool
+	// should degrade to an empty result rather than surfacing the error.
+	mock := &mockAPI{err: moonraker.ErrNotFound}
+
+	_, out, err := tools.NewSensorsListHandler(mock)(t.Context(), nil, tools.SensorsListParams{})
+	if err != nil {
+		t.Fatalf("handler should not error on 404: %v", err)
+	}
+
+	sensors, ok := out["sensors"].(map[string]any)
+	if !ok {
+		t.Fatalf("out = %v, want a top-level empty sensors object", out)
+	}
+
+	if len(sensors) != 0 {
+		t.Errorf("sensors = %v, want empty", sensors)
+	}
+}
+
+func TestSensorsList_PropagatesOtherErrors(t *testing.T) {
+	t.Parallel()
+
+	mock := &mockAPI{err: errStub}
+
+	_, _, err := tools.NewSensorsListHandler(mock)(t.Context(), nil, tools.SensorsListParams{})
+	if !errors.Is(err, tools.ErrMoonraker) {
+		t.Fatalf("err = %v, want ErrMoonraker for non-404 failures", err)
 	}
 }
 

@@ -20,6 +20,12 @@ var ErrNotAuthenticated = errors.New("not authenticated")
 // ErrAPI indicates Moonraker returned an error response or an unexpected body.
 var ErrAPI = errors.New("moonraker API error")
 
+// ErrNotFound indicates Moonraker returned HTTP 404. It wraps ErrAPI, so it
+// satisfies errors.Is(err, ErrAPI) too. Callers can use it to degrade gracefully
+// when an optional component (a sensor, power device, or WLED strip) is simply
+// not configured.
+var ErrNotFound = errors.Wrap(ErrAPI, "resource not found")
+
 // apiErr wraps err with a message and marks it as an API failure.
 func apiErr(err error, format string, args ...any) error {
 	//nolint:wrapcheck // Mark only adds a sentinel category; Wrapf already added the message.

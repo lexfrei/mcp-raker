@@ -246,14 +246,22 @@ func decodeEnvelope(method, path string, status int, data []byte) (json.RawMessa
 }
 
 // statusErr builds an API error from a non-2xx response, surfacing Moonraker's
-// error message when present.
+// error message when present. A 404 wraps ErrNotFound so callers can degrade
+// gracefully when an optional component is not configured.
 func statusErr(method, path string, status int, data []byte) error {
+	// A 404 wraps ErrNotFound (which itself wraps ErrAPI) so callers can branch
+	// on a missing resource while generic ErrAPI handling still matches.
+	base := ErrAPI
+	if status == http.StatusNotFound {
+		base = ErrNotFound
+	}
+
 	var envelope errorEnvelope
 
 	unErr := json.Unmarshal(data, &envelope)
 	if unErr == nil && envelope.Error != nil && envelope.Error.Message != "" {
-		return errors.Wrapf(ErrAPI, "%s %s: %s (status %d)", method, path, envelope.Error.Message, status)
+		return errors.Wrapf(base, "%s %s: %s (status %d)", method, path, envelope.Error.Message, status)
 	}
 
-	return errors.Wrapf(ErrAPI, "%s %s: status %d", method, path, status)
+	return errors.Wrapf(base, "%s %s: status %d", method, path, status)
 }
