@@ -246,18 +246,21 @@ func TestOptionalParamsNotRequired(t *testing.T) {
 		}
 	}
 
-	// These tools keep their genuinely required parameters.
-	mustRequire := map[string]string{
-		"moonraker_print_start":  "filename",
-		"moonraker_history_job":  "uid",
-		"moonraker_gcode_script": "script",
-		"moonraker_db_post_item": "key",
-		"moonraker_wled_set":     "strip",
-		"moonraker_sensors_info": "sensor",
+	// These tools keep their genuinely required parameters. A database write must
+	// require value so a client cannot omit it and store null by accident.
+	mustRequire := map[string][]string{
+		"moonraker_print_start":  {"filename"},
+		"moonraker_history_job":  {"uid"},
+		"moonraker_gcode_script": {"script"},
+		"moonraker_db_post_item": {"namespace", "key", "value"},
+		"moonraker_wled_set":     {"strip"},
+		"moonraker_sensors_info": {"sensor"},
 	}
-	for name, field := range mustRequire {
-		if !slices.Contains(required(name), field) {
-			t.Errorf("%s: required = %v, want it to include %q", name, required(name), field)
+	for name, fields := range mustRequire {
+		for _, field := range fields {
+			if !slices.Contains(required(name), field) {
+				t.Errorf("%s: required = %v, want it to include %q", name, required(name), field)
+			}
 		}
 	}
 }

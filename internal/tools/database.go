@@ -61,11 +61,14 @@ func NewDBGetItemHandler(api moonraker.API) mcp.ToolHandlerFor[DBGetItemParams, 
 	}
 }
 
-// DBPostItemParams defines the parameters for moonraker_db_post_item.
+// DBPostItemParams defines the parameters for moonraker_db_post_item. Value has
+// no omitempty: a write must carry a value (which may itself be JSON null), so it
+// stays required in the schema rather than letting a client omit it and store
+// null by accident.
 type DBPostItemParams struct {
-	Namespace string `json:"namespace"       jsonschema:"Database namespace to write to"`
-	Key       string `json:"key"             jsonschema:"Dotted key within the namespace"`
-	Value     any    `json:"value,omitempty" jsonschema:"Value to store; may be any JSON type"`
+	Namespace string `json:"namespace" jsonschema:"Database namespace to write to"`
+	Key       string `json:"key"       jsonschema:"Dotted key within the namespace"`
+	Value     any    `json:"value"     jsonschema:"Value to store; may be any JSON type"`
 }
 
 // DBPostItemTool returns the definition for moonraker_db_post_item.
