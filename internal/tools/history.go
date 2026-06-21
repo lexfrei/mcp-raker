@@ -12,11 +12,12 @@ import (
 
 // HistoryListParams defines the parameters for moonraker_history_list.
 type HistoryListParams struct {
-	Limit  int     `json:"limit,omitempty"  jsonschema:"Maximum number of jobs to return"`
-	Start  int     `json:"start,omitempty"  jsonschema:"Number of jobs to skip from the start"`
-	Before float64 `json:"before,omitempty" jsonschema:"Only include jobs that ended before this Unix timestamp"`
-	Since  float64 `json:"since,omitempty"  jsonschema:"Only include jobs that started after this Unix timestamp"`
-	Order  string  `json:"order,omitempty"  jsonschema:"Sort order: 'asc' or 'desc'"`
+	Limit             int     `json:"limit,omitempty"              jsonschema:"Maximum number of jobs to return"`
+	Start             int     `json:"start,omitempty"              jsonschema:"Number of jobs to skip from the start"`
+	Before            float64 `json:"before,omitempty"             jsonschema:"Only include jobs that ended before this Unix timestamp"`
+	Since             float64 `json:"since,omitempty"              jsonschema:"Only include jobs that started after this Unix timestamp"`
+	Order             string  `json:"order,omitempty"              jsonschema:"Sort order: 'asc' or 'desc'"`
+	IncludeThumbnails bool    `json:"include_thumbnails,omitempty" jsonschema:"When true, keep each job's gcode thumbnails; by default they are stripped to save context"`
 }
 
 // HistoryListTool returns the definition for moonraker_history_list.
@@ -53,8 +54,39 @@ func NewHistoryListHandler(api moonraker.API) mcp.ToolHandlerFor[HistoryListPara
 		}
 
 		out, err := decodeResult(api.Get(ctx, "/server/history/list", query))
+		if err != nil {
+			return nil, out, err
+		}
 
-		return nil, out, err
+		if !params.IncludeThumbnails {
+			stripHistoryThumbnails(out)
+		}
+
+		return nil, out, nil
+	}
+}
+
+// stripHistoryThumbnails removes the bulky thumbnail list from each job's
+// metadata, where Moonraker records it. Missing keys or unexpected shapes are
+// left untouched.
+func stripHistoryThumbnails(out map[string]any) {
+	jobs, ok := out["jobs"].([]any)
+	if !ok {
+		return
+	}
+
+	for _, job := range jobs {
+		jobMap, ok := job.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		metadata, ok := jobMap["metadata"].(map[string]any)
+		if !ok {
+			continue
+		}
+
+		delete(metadata, "thumbnails")
 	}
 }
 
