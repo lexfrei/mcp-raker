@@ -84,7 +84,7 @@ func NewServerConfigHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[
 
 // TemperatureStoreParams defines the parameters for moonraker_temperature_store.
 type TemperatureStoreParams struct {
-	IncludeMonitors bool `json:"include_monitors" jsonschema:"When true, include temperature monitors in addition to heaters and sensors"`
+	IncludeMonitors bool `json:"include_monitors,omitempty" jsonschema:"When true, include temperature monitors in addition to heaters and sensors"`
 }
 
 // TemperatureStoreTool returns the definition for moonraker_temperature_store.
@@ -117,7 +117,7 @@ func NewTemperatureStoreHandler(api moonraker.API) mcp.ToolHandlerFor[Temperatur
 
 // GcodeStoreParams defines the parameters for moonraker_gcode_store.
 type GcodeStoreParams struct {
-	Count int `json:"count" jsonschema:"Number of recent G-code store entries to return; omit or 0 to use the server default"`
+	Count int `json:"count,omitempty" jsonschema:"Number of recent G-code store entries to return; omit or 0 to use the server default"`
 }
 
 // GcodeStoreTool returns the definition for moonraker_gcode_store.
@@ -149,7 +149,7 @@ func NewGcodeStoreHandler(api moonraker.API) mcp.ToolHandlerFor[GcodeStoreParams
 
 // LogsRolloverParams defines the parameters for moonraker_logs_rollover.
 type LogsRolloverParams struct {
-	Application string `json:"application" jsonschema:"Optional application log to roll over (e.g. 'moonraker' or 'klipper'); omit to roll over all logs"`
+	Application string `json:"application,omitempty" jsonschema:"Optional application log to roll over (e.g. 'moonraker' or 'klipper'); omit to roll over all logs"`
 }
 
 // LogsRolloverTool returns the definition for moonraker_logs_rollover (admin).

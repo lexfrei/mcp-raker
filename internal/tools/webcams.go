@@ -58,8 +58,8 @@ func NewWebcamsGetHandler(api moonraker.API) mcp.ToolHandlerFor[WebcamNameParams
 
 // WebcamsAddParams defines the parameters for moonraker_webcams_add.
 type WebcamsAddParams struct {
-	Name     string         `json:"name"     jsonschema:"Name of the webcam to create or update"`
-	Settings map[string]any `json:"settings" jsonschema:"Webcam fields such as stream_url, snapshot_url, rotation, flip_horizontal, flip_vertical, target_fps"`
+	Name     string         `json:"name"               jsonschema:"Name of the webcam to create or update"`
+	Settings map[string]any `json:"settings,omitempty" jsonschema:"Webcam fields such as stream_url, snapshot_url, rotation, flip_horizontal, flip_vertical, target_fps"`
 }
 
 // WebcamsAddTool returns the definition for moonraker_webcams_add.

@@ -29,8 +29,8 @@ func NewDBListHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string
 
 // DBGetItemParams defines the parameters for moonraker_db_get_item.
 type DBGetItemParams struct {
-	Namespace string `json:"namespace" jsonschema:"Database namespace to read from"`
-	Key       string `json:"key"       jsonschema:"Dotted key within the namespace; omit to return the whole namespace"`
+	Namespace string `json:"namespace"     jsonschema:"Database namespace to read from"`
+	Key       string `json:"key,omitempty" jsonschema:"Dotted key within the namespace; omit to return the whole namespace"`
 }
 
 // DBGetItemTool returns the definition for moonraker_db_get_item.
@@ -63,9 +63,9 @@ func NewDBGetItemHandler(api moonraker.API) mcp.ToolHandlerFor[DBGetItemParams, 
 
 // DBPostItemParams defines the parameters for moonraker_db_post_item.
 type DBPostItemParams struct {
-	Namespace string `json:"namespace" jsonschema:"Database namespace to write to"`
-	Key       string `json:"key"       jsonschema:"Dotted key within the namespace"`
-	Value     any    `json:"value"     jsonschema:"Value to store; may be any JSON type"`
+	Namespace string `json:"namespace"       jsonschema:"Database namespace to write to"`
+	Key       string `json:"key"             jsonschema:"Dotted key within the namespace"`
+	Value     any    `json:"value,omitempty" jsonschema:"Value to store; may be any JSON type"`
 }
 
 // DBPostItemTool returns the definition for moonraker_db_post_item.
@@ -136,7 +136,7 @@ func NewDBDeleteItemHandler(api moonraker.API) mcp.ToolHandlerFor[DBDeleteItemPa
 
 // DBBackupParams defines the parameters for moonraker_db_backup.
 type DBBackupParams struct {
-	Filename string `json:"filename" jsonschema:"Optional backup filename; omit to use the server default"`
+	Filename string `json:"filename,omitempty" jsonschema:"Optional backup filename; omit to use the server default"`
 }
 
 // DBBackupTool returns the definition for moonraker_db_backup.

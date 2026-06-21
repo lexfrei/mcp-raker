@@ -130,11 +130,11 @@ func NewWLEDToggleHandler(api moonraker.API) mcp.ToolHandlerFor[StripParams, map
 // (preset index 0, intensity/speed 0-255), so it must be distinguishable from
 // "unset". Brightness is documented 1-255, so its zero value safely means unset.
 type WLEDSetParams struct {
-	Strip      string `json:"strip"      jsonschema:"Name of the WLED strip"`
-	Preset     *int   `json:"preset"     jsonschema:"Preset index to apply; omit to leave unchanged"`
-	Brightness int    `json:"brightness" jsonschema:"Brightness 1-255; omit or 0 to leave unchanged"`
-	Intensity  *int   `json:"intensity"  jsonschema:"Effect intensity 0-255; omit to leave unchanged"`
-	Speed      *int   `json:"speed"      jsonschema:"Effect speed 0-255; omit to leave unchanged"`
+	Strip      string `json:"strip"                jsonschema:"Name of the WLED strip"`
+	Preset     *int   `json:"preset,omitempty"     jsonschema:"Preset index to apply; omit to leave unchanged"`
+	Brightness int    `json:"brightness,omitempty" jsonschema:"Brightness 1-255; omit or 0 to leave unchanged"`
+	Intensity  *int   `json:"intensity,omitempty"  jsonschema:"Effect intensity 0-255; omit to leave unchanged"`
+	Speed      *int   `json:"speed,omitempty"      jsonschema:"Effect speed 0-255; omit to leave unchanged"`
 }
 
 // WLEDSetTool returns the definition for moonraker_wled_set.

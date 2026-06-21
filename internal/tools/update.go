@@ -12,7 +12,7 @@ import (
 // UpdateNameParams names an optional update target (a configured client,
 // "moonraker", "klipper", "system", etc.).
 type UpdateNameParams struct {
-	Name string `json:"name" jsonschema:"Name of the update target; omit to apply to every configured target"`
+	Name string `json:"name,omitempty" jsonschema:"Name of the update target; omit to apply to every configured target"`
 }
 
 // UpdateStatusTool returns the definition for moonraker_update_status.
@@ -81,8 +81,8 @@ func NewUpdateUpgradeHandler(api moonraker.API) mcp.ToolHandlerFor[UpdateNamePar
 
 // UpdateRecoverParams defines the parameters for moonraker_update_recover.
 type UpdateRecoverParams struct {
-	Name string `json:"name" jsonschema:"Name of the git-backed update target to repair"`
-	Hard bool   `json:"hard" jsonschema:"When true, perform a hard recovery by re-cloning the repository"`
+	Name string `json:"name"           jsonschema:"Name of the git-backed update target to repair"`
+	Hard bool   `json:"hard,omitempty" jsonschema:"When true, perform a hard recovery by re-cloning the repository"`
 }
 
 // UpdateRecoverTool returns the definition for moonraker_update_recover (admin).

@@ -119,7 +119,7 @@ func NewPeripheralsVideoHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, 
 
 // PeripheralsCanbusParams defines the parameters for moonraker_peripherals_canbus.
 type PeripheralsCanbusParams struct {
-	Interface string `json:"interface" jsonschema:"CAN interface to scan, e.g. 'can0'; omit to use the default"`
+	Interface string `json:"interface,omitempty" jsonschema:"CAN interface to scan, e.g. 'can0'; omit to use the default"`
 }
 
 // PeripheralsCanbusTool returns the definition for moonraker_peripherals_canbus.

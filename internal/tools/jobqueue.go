@@ -32,8 +32,8 @@ func NewJobQueueStatusHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, ma
 
 // JobQueueEnqueueParams defines the parameters for moonraker_jobqueue_enqueue.
 type JobQueueEnqueueParams struct {
-	Filenames []string `json:"filenames" jsonschema:"Gcode filenames (relative to the gcodes root) to append to the queue"`
-	Reset     bool     `json:"reset"     jsonschema:"When true, clear the existing queue before adding these jobs"`
+	Filenames []string `json:"filenames"       jsonschema:"Gcode filenames (relative to the gcodes root) to append to the queue"`
+	Reset     bool     `json:"reset,omitempty" jsonschema:"When true, clear the existing queue before adding these jobs"`
 }
 
 // JobQueueEnqueueTool returns the definition for moonraker_jobqueue_enqueue.
@@ -63,8 +63,8 @@ func NewJobQueueEnqueueHandler(api moonraker.API) mcp.ToolHandlerFor[JobQueueEnq
 
 // JobQueueRemoveParams defines the parameters for moonraker_jobqueue_remove.
 type JobQueueRemoveParams struct {
-	JobIDs []string `json:"job_ids" jsonschema:"Queue job identifiers to remove"`
-	All    bool     `json:"all"     jsonschema:"When true, clear the entire queue instead of specific ids"`
+	JobIDs []string `json:"job_ids,omitempty" jsonschema:"Queue job identifiers to remove"`
+	All    bool     `json:"all,omitempty"     jsonschema:"When true, clear the entire queue instead of specific ids"`
 }
 
 // JobQueueRemoveTool returns the definition for moonraker_jobqueue_remove.

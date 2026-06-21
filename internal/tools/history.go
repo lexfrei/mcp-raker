@@ -12,11 +12,11 @@ import (
 
 // HistoryListParams defines the parameters for moonraker_history_list.
 type HistoryListParams struct {
-	Limit  int     `json:"limit"  jsonschema:"Maximum number of jobs to return"`
-	Start  int     `json:"start"  jsonschema:"Number of jobs to skip from the start"`
-	Before float64 `json:"before" jsonschema:"Only include jobs that ended before this Unix timestamp"`
-	Since  float64 `json:"since"  jsonschema:"Only include jobs that started after this Unix timestamp"`
-	Order  string  `json:"order"  jsonschema:"Sort order: 'asc' or 'desc'"`
+	Limit  int     `json:"limit,omitempty"  jsonschema:"Maximum number of jobs to return"`
+	Start  int     `json:"start,omitempty"  jsonschema:"Number of jobs to skip from the start"`
+	Before float64 `json:"before,omitempty" jsonschema:"Only include jobs that ended before this Unix timestamp"`
+	Since  float64 `json:"since,omitempty"  jsonschema:"Only include jobs that started after this Unix timestamp"`
+	Order  string  `json:"order,omitempty"  jsonschema:"Sort order: 'asc' or 'desc'"`
 }
 
 // HistoryListTool returns the definition for moonraker_history_list.
@@ -124,8 +124,8 @@ func NewHistoryResetTotalsHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams
 
 // HistoryDeleteJobParams defines the parameters for moonraker_history_delete_job.
 type HistoryDeleteJobParams struct {
-	UID string `json:"uid" jsonschema:"Unique id of the job to delete"`
-	All bool   `json:"all" jsonschema:"When true, delete every recorded job instead of a single uid"`
+	UID string `json:"uid,omitempty" jsonschema:"Unique id of the job to delete"`
+	All bool   `json:"all,omitempty" jsonschema:"When true, delete every recorded job instead of a single uid"`
 }
 
 // HistoryDeleteJobTool returns the definition for moonraker_history_delete_job.

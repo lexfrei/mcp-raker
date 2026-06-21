@@ -28,9 +28,9 @@ func NewAnalysisStatusHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, ma
 
 // AnalysisEstimateParams defines the parameters for moonraker_analysis_estimate.
 type AnalysisEstimateParams struct {
-	Filename        string `json:"filename"         jsonschema:"Gcode file to estimate, relative to the gcodes root"`
-	EstimatorConfig string `json:"estimator_config" jsonschema:"Optional estimator configuration name to use"`
-	UpdateMetadata  bool   `json:"update_metadata"  jsonschema:"When true, write the estimate back into the file's metadata"`
+	Filename        string `json:"filename"                   jsonschema:"Gcode file to estimate, relative to the gcodes root"`
+	EstimatorConfig string `json:"estimator_config,omitempty" jsonschema:"Optional estimator configuration name to use"`
+	UpdateMetadata  bool   `json:"update_metadata,omitempty"  jsonschema:"When true, write the estimate back into the file's metadata"`
 }
 
 // AnalysisEstimateTool returns the definition for moonraker_analysis_estimate.
@@ -86,7 +86,7 @@ func NewAnalysisProcessHandler(api moonraker.API) mcp.ToolHandlerFor[FilenamePar
 
 // AnalysisDumpConfigParams defines the parameters for moonraker_analysis_dump_config.
 type AnalysisDumpConfigParams struct {
-	DestConfig string `json:"dest_config" jsonschema:"Optional destination path to write the estimator configuration to"`
+	DestConfig string `json:"dest_config,omitempty" jsonschema:"Optional destination path to write the estimator configuration to"`
 }
 
 // AnalysisDumpConfigTool returns the definition for moonraker_analysis_dump_config.

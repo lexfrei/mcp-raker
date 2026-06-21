@@ -12,7 +12,7 @@ import (
 
 // AnnouncementsListParams defines the parameters for moonraker_announcements_list.
 type AnnouncementsListParams struct {
-	IncludeDismissed bool `json:"include_dismissed" jsonschema:"When true, also include dismissed announcements"`
+	IncludeDismissed bool `json:"include_dismissed,omitempty" jsonschema:"When true, also include dismissed announcements"`
 }
 
 // AnnouncementsListTool returns the definition for moonraker_announcements_list.
@@ -58,8 +58,8 @@ func NewAnnouncementsUpdateHandler(api moonraker.API) mcp.ToolHandlerFor[NoParam
 
 // AnnouncementsDismissParams defines the parameters for moonraker_announcements_dismiss.
 type AnnouncementsDismissParams struct {
-	EntryID  string `json:"entry_id"  jsonschema:"Identifier of the announcement to dismiss"`
-	WakeTime int    `json:"wake_time" jsonschema:"Optional seconds after which the announcement reappears"`
+	EntryID  string `json:"entry_id"            jsonschema:"Identifier of the announcement to dismiss"`
+	WakeTime int    `json:"wake_time,omitempty" jsonschema:"Optional seconds after which the announcement reappears"`
 }
 
 // AnnouncementsDismissTool returns the definition for moonraker_announcements_dismiss.

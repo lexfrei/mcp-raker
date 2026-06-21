@@ -65,7 +65,7 @@ type FilesListResult struct {
 
 // FilesListParams defines the parameters for moonraker_files_list.
 type FilesListParams struct {
-	Root string `json:"root" jsonschema:"File-manager root to list, e.g. 'gcodes' (default), 'config', or 'logs'"`
+	Root string `json:"root,omitempty" jsonschema:"File-manager root to list, e.g. 'gcodes' (default), 'config', or 'logs'"`
 }
 
 // FilesListTool returns the definition for moonraker_files_list.
@@ -90,8 +90,8 @@ func NewFilesListHandler(api moonraker.API) mcp.ToolHandlerFor[FilesListParams, 
 
 // FilesDirectoryParams defines the parameters for moonraker_files_directory.
 type FilesDirectoryParams struct {
-	Path     string `json:"path"     jsonschema:"Directory path to list, e.g. 'gcodes' (default) or 'gcodes/subdir'"`
-	Extended bool   `json:"extended" jsonschema:"When true, include gcode metadata for each file"`
+	Path     string `json:"path,omitempty"     jsonschema:"Directory path to list, e.g. 'gcodes' (default) or 'gcodes/subdir'"`
+	Extended bool   `json:"extended,omitempty" jsonschema:"When true, include gcode metadata for each file"`
 }
 
 // FilesDirectoryTool returns the definition for moonraker_files_directory.
@@ -224,8 +224,8 @@ func NewFilesThumbnailsHandler(api moonraker.API) mcp.ToolHandlerFor[FilenamePar
 
 // PathParams names a directory path within a file-manager root.
 type PathParams struct {
-	Path  string `json:"path"  jsonschema:"Directory path including its root, e.g. 'gcodes/new_folder'"`
-	Force bool   `json:"force" jsonschema:"When true, delete the directory even if it is not empty"`
+	Path  string `json:"path"            jsonschema:"Directory path including its root, e.g. 'gcodes/new_folder'"`
+	Force bool   `json:"force,omitempty" jsonschema:"When true, delete the directory even if it is not empty"`
 }
 
 // FilesCreateDirectoryTool returns the definition for moonraker_files_create_directory.
@@ -347,9 +347,9 @@ func NewFilesCopyHandler(api moonraker.API) mcp.ToolHandlerFor[SourceDestParams,
 
 // FilesZipParams defines the parameters for moonraker_files_zip.
 type FilesZipParams struct {
-	Items     []string `json:"items"      jsonschema:"Files or directories (including their root) to add to the archive"`
-	Dest      string   `json:"dest"       jsonschema:"Destination path for the zip file; omit to use a default location"`
-	StoreOnly bool     `json:"store_only" jsonschema:"When true, store without compression"`
+	Items     []string `json:"items"                jsonschema:"Files or directories (including their root) to add to the archive"`
+	Dest      string   `json:"dest,omitempty"       jsonschema:"Destination path for the zip file; omit to use a default location"`
+	StoreOnly bool     `json:"store_only,omitempty" jsonschema:"When true, store without compression"`
 }
 
 // FilesZipTool returns the definition for moonraker_files_zip.
@@ -382,8 +382,8 @@ func NewFilesZipHandler(api moonraker.API) mcp.ToolHandlerFor[FilesZipParams, ma
 
 // FileDownloadParams defines the parameters for moonraker_files_download.
 type FileDownloadParams struct {
-	Root     string `json:"root"     jsonschema:"File-manager root, e.g. 'gcodes' (default), 'config', or 'logs'"`
-	Filename string `json:"filename" jsonschema:"Path of the file within the root, e.g. 'printer.cfg'"`
+	Root     string `json:"root,omitempty" jsonschema:"File-manager root, e.g. 'gcodes' (default), 'config', or 'logs'"`
+	Filename string `json:"filename"       jsonschema:"Path of the file within the root, e.g. 'printer.cfg'"`
 }
 
 // FileDownload is the output of moonraker_files_download.
@@ -391,7 +391,7 @@ type FileDownload struct {
 	Filename  string `json:"filename"`
 	Size      int    `json:"size"`
 	Truncated bool   `json:"truncated"`
-	Content   string `json:"content"`
+	Content   string `json:"content,omitempty"`
 }
 
 // FilesDownloadTool returns the definition for moonraker_files_download.
@@ -438,11 +438,11 @@ func NewFilesDownloadHandler(api moonraker.API) mcp.ToolHandlerFor[FileDownloadP
 
 // FilesUploadParams defines the parameters for moonraker_files_upload.
 type FilesUploadParams struct {
-	Root       string `json:"root"        jsonschema:"File-manager root to upload into, e.g. 'gcodes' (default)"`
-	Path       string `json:"path"        jsonschema:"Optional subdirectory within the root"`
-	Filename   string `json:"filename"    jsonschema:"Name to store the uploaded file under, e.g. 'part.gcode'"`
-	Content    string `json:"content"     jsonschema:"The full text content of the file to upload"`
-	StartPrint bool   `json:"start_print" jsonschema:"When true, start printing the file immediately after upload"`
+	Root       string `json:"root,omitempty"        jsonschema:"File-manager root to upload into, e.g. 'gcodes' (default)"`
+	Path       string `json:"path,omitempty"        jsonschema:"Optional subdirectory within the root"`
+	Filename   string `json:"filename"              jsonschema:"Name to store the uploaded file under, e.g. 'part.gcode'"`
+	Content    string `json:"content,omitempty"     jsonschema:"The full text content of the file to upload"`
+	StartPrint bool   `json:"start_print,omitempty" jsonschema:"When true, start printing the file immediately after upload"`
 }
 
 // FilesUploadTool returns the definition for moonraker_files_upload.

@@ -11,7 +11,7 @@ import (
 
 // SensorsListParams defines the parameters for moonraker_sensors_list.
 type SensorsListParams struct {
-	Extended bool `json:"extended" jsonschema:"When true, include each sensor's configuration and parameters"`
+	Extended bool `json:"extended,omitempty" jsonschema:"When true, include each sensor's configuration and parameters"`
 }
 
 // SensorsListTool returns the definition for moonraker_sensors_list.
@@ -67,7 +67,7 @@ func NewSensorsInfoHandler(api moonraker.API) mcp.ToolHandlerFor[SensorParams, m
 
 // SensorsMeasurementsParams defines the parameters for moonraker_sensors_measurements.
 type SensorsMeasurementsParams struct {
-	Sensor string `json:"sensor" jsonschema:"Name of a single sensor; omit to return measurements for all sensors"`
+	Sensor string `json:"sensor,omitempty" jsonschema:"Name of a single sensor; omit to return measurements for all sensors"`
 }
 
 // SensorsMeasurementsTool returns the definition for moonraker_sensors_measurements.

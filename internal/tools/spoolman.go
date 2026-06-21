@@ -74,10 +74,10 @@ func NewSpoolmanSetSpoolHandler(api moonraker.API) mcp.ToolHandlerFor[SpoolmanSe
 
 // SpoolmanProxyParams defines the parameters for moonraker_spoolman_proxy.
 type SpoolmanProxyParams struct {
-	RequestMethod string         `json:"request_method" jsonschema:"HTTP method to forward to the Spoolman server, e.g. 'GET' or 'POST'"`
-	Path          string         `json:"path"           jsonschema:"Spoolman API path to call, e.g. '/v1/spool'"`
-	Query         map[string]any `json:"query"          jsonschema:"Optional query parameters to forward"`
-	Body          any            `json:"body"           jsonschema:"Optional request body to forward"`
+	RequestMethod string         `json:"request_method"  jsonschema:"HTTP method to forward to the Spoolman server, e.g. 'GET' or 'POST'"`
+	Path          string         `json:"path"            jsonschema:"Spoolman API path to call, e.g. '/v1/spool'"`
+	Query         map[string]any `json:"query,omitempty" jsonschema:"Optional query parameters to forward"`
+	Body          any            `json:"body,omitempty"  jsonschema:"Optional request body to forward"`
 }
 
 // SpoolmanProxyTool returns the definition for moonraker_spoolman_proxy.

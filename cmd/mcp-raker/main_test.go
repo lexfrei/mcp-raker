@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"strings"
 	"testing"
 
@@ -189,6 +190,73 @@ func TestToolOutputSchemasNoBooleanProperty(t *testing.T) {
 			if value := strings.TrimSpace(string(propSchema)); value == "true" || value == "false" {
 				t.Errorf("%s: property %q has a bare boolean schema %s (rejected by strict clients)", name, prop, value)
 			}
+		}
+	}
+}
+
+// TestOptionalParamsNotRequired verifies that filter and paging parameters with
+// sensible defaults are not marked required in the generated input schema, while
+// genuinely required parameters still are. The SDK marks every struct field
+// required unless its json tag carries omitempty, so a regression here means a
+// caller is forced to send placeholder values.
+func TestOptionalParamsNotRequired(t *testing.T) {
+	t.Parallel()
+
+	tools := listTools(t, true)
+
+	required := func(name string) []string {
+		tool, ok := tools[name]
+		if !ok {
+			t.Fatalf("tool %q not registered", name)
+		}
+
+		schema, ok := tool.InputSchema.(map[string]any)
+		if !ok {
+			t.Fatalf("tool %q input schema is %T, want a JSON object", name, tool.InputSchema)
+		}
+
+		raw, _ := schema["required"].([]any)
+
+		out := make([]string, 0, len(raw))
+		for _, value := range raw {
+			if field, ok := value.(string); ok {
+				out = append(out, field)
+			}
+		}
+
+		return out
+	}
+
+	// These tools have only optional filter/paging parameters.
+	allOptional := []string{
+		"moonraker_history_list",
+		"moonraker_files_list",
+		"moonraker_temperature_store",
+		"moonraker_gcode_store",
+		"moonraker_sensors_list",
+		"moonraker_sensors_measurements",
+		"moonraker_files_directory",
+		"moonraker_update_refresh",
+		"moonraker_db_backup",
+	}
+	for _, name := range allOptional {
+		if got := required(name); len(got) != 0 {
+			t.Errorf("%s: required = %v, want none", name, got)
+		}
+	}
+
+	// These tools keep their genuinely required parameters.
+	mustRequire := map[string]string{
+		"moonraker_print_start":  "filename",
+		"moonraker_history_job":  "uid",
+		"moonraker_gcode_script": "script",
+		"moonraker_db_post_item": "key",
+		"moonraker_wled_set":     "strip",
+		"moonraker_sensors_info": "sensor",
+	}
+	for name, field := range mustRequire {
+		if !slices.Contains(required(name), field) {
+			t.Errorf("%s: required = %v, want it to include %q", name, required(name), field)
 		}
 	}
 }

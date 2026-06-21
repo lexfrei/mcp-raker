@@ -28,9 +28,9 @@ func NewExtensionsListHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, ma
 
 // ExtensionsRequestParams defines the parameters for moonraker_extensions_request.
 type ExtensionsRequestParams struct {
-	Agent     string `json:"agent"     jsonschema:"Name of the registered agent or extension to call"`
-	Method    string `json:"method"    jsonschema:"Method the agent exposes"`
-	Arguments any    `json:"arguments" jsonschema:"Optional arguments to pass to the agent method"`
+	Agent     string `json:"agent"               jsonschema:"Name of the registered agent or extension to call"`
+	Method    string `json:"method"              jsonschema:"Method the agent exposes"`
+	Arguments any    `json:"arguments,omitempty" jsonschema:"Optional arguments to pass to the agent method"`
 }
 
 // ExtensionsRequestTool returns the definition for moonraker_extensions_request.
