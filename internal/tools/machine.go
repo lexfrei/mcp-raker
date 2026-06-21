@@ -36,7 +36,7 @@ const defaultProcStatsSamples = 5
 type ProcStatsParams struct {
 	// Samples is a pointer so an omitted value (nil) can be told apart from an
 	// explicit 0: omit for the last few points, 0 for the full history.
-	Samples *int `json:"samples,omitempty" jsonschema:"How many recent CPU history points to return; omit for the last 5, 0 for the full history"`
+	Samples *int `json:"samples,omitempty" jsonschema:"How many recent CPU history points to return; omit for the last 5, 0 or less for the full history"`
 }
 
 // ProcStatsTool returns the definition for moonraker_proc_stats.

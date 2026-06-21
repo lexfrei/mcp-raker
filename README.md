@@ -44,7 +44,7 @@ Every tool returns its result as a top-level JSON object — read the fields dir
 
 Two reads trim their payload by default to keep an assistant's context small:
 
-- `moonraker_proc_stats` returns the last 5 CPU-history points; pass `samples` for more, or `0` for the full history.
+- `moonraker_proc_stats` returns the last 5 CPU-history points; pass `samples` for more, or `0` (or less) for the full history.
 - `moonraker_history_list` drops each job's gcode thumbnails; pass `include_thumbnails: true` to keep them.
 
 `moonraker_sensors_list` returns an empty result instead of an error when the printer has no `[sensor]` section configured.

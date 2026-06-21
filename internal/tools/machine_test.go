@@ -87,6 +87,22 @@ func TestProcStats_SamplesN(t *testing.T) {
 	}
 }
 
+func TestProcStats_NegativeSamplesKeepsAll(t *testing.T) {
+	t.Parallel()
+
+	negative := -1
+	mock := &mockAPI{result: procStatsFixture(10)}
+
+	_, out, err := tools.NewProcStatsHandler(mock)(t.Context(), nil, tools.ProcStatsParams{Samples: &negative})
+	if err != nil {
+		t.Fatalf("handler: %v", err)
+	}
+
+	if got := procStatsCount(t, out); got != 10 {
+		t.Errorf("kept %d points, want all 10 (a negative count means full history)", got)
+	}
+}
+
 func TestProcStats_FewerThanLimitUnchanged(t *testing.T) {
 	t.Parallel()
 
