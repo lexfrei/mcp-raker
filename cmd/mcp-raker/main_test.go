@@ -14,7 +14,7 @@ import (
 )
 
 // adminToolCount is the number of tools gated behind MOONRAKER_ENABLE_ADMIN.
-const adminToolCount = 18
+const adminToolCount = 16
 
 func testLogger() *slog.Logger {
 	return slog.New(slog.DiscardHandler)
@@ -114,6 +114,21 @@ func TestRegisterTools_CoreOnly(t *testing.T) {
 
 	if !names["moonraker_emergency_stop"] {
 		t.Error("core tool moonraker_emergency_stop not registered")
+	}
+
+	// Klipper restart is a printer action, not an OS/service admin action, so it
+	// is available without MOONRAKER_ENABLE_ADMIN.
+	if !names["moonraker_printer_restart"] {
+		t.Error("core tool moonraker_printer_restart not registered")
+	}
+
+	if !names["moonraker_firmware_restart"] {
+		t.Error("core tool moonraker_firmware_restart not registered")
+	}
+
+	// The Moonraker server restart (a service action) stays behind the admin gate.
+	if names["moonraker_server_restart"] {
+		t.Error("admin tool moonraker_server_restart registered without MOONRAKER_ENABLE_ADMIN")
 	}
 
 	if names["moonraker_machine_shutdown"] {

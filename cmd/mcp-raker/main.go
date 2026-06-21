@@ -154,6 +154,11 @@ func registerCoreTools(server *mcp.Server, api moonraker.API) {
 	mcp.AddTool(server, tools.GcodeHelpTool(), tools.NewGcodeHelpHandler(api))
 	mcp.AddTool(server, tools.EmergencyStopTool(), tools.NewEmergencyStopHandler(api))
 
+	// Klipper restart is a printer endpoint, not an OS/service admin action, so
+	// it stays outside the MOONRAKER_ENABLE_ADMIN gate alongside emergency stop.
+	mcp.AddTool(server, tools.PrinterRestartTool(), tools.NewPrinterRestartHandler(api))
+	mcp.AddTool(server, tools.FirmwareRestartTool(), tools.NewFirmwareRestartHandler(api))
+
 	// Print job control.
 	mcp.AddTool(server, tools.PrintStartTool(), tools.NewPrintStartHandler(api))
 	mcp.AddTool(server, tools.PrintPauseTool(), tools.NewPrintPauseHandler(api))
@@ -272,8 +277,6 @@ func registerCoreTools(server *mcp.Server, api moonraker.API) {
 func registerAdminTools(server *mcp.Server, api moonraker.API) {
 	mcp.AddTool(server, tools.LogsRolloverTool(), tools.NewLogsRolloverHandler(api))
 	mcp.AddTool(server, tools.ServerRestartTool(), tools.NewServerRestartHandler(api))
-	mcp.AddTool(server, tools.PrinterRestartTool(), tools.NewPrinterRestartHandler(api))
-	mcp.AddTool(server, tools.FirmwareRestartTool(), tools.NewFirmwareRestartHandler(api))
 	mcp.AddTool(server, tools.MachineShutdownTool(), tools.NewMachineShutdownHandler(api))
 	mcp.AddTool(server, tools.MachineRebootTool(), tools.NewMachineRebootHandler(api))
 	mcp.AddTool(server, tools.ServiceStartTool(), tools.NewServiceStartHandler(api))
