@@ -386,12 +386,14 @@ type FileDownloadParams struct {
 	Filename string `json:"filename"       jsonschema:"Path of the file within the root, e.g. 'printer.cfg'"`
 }
 
-// FileDownload is the output of moonraker_files_download.
+// FileDownload is the output of moonraker_files_download. Content has no
+// omitempty: an empty file should still report content as "" rather than dropping
+// the field, keeping the output shape uniform.
 type FileDownload struct {
 	Filename  string `json:"filename"`
 	Size      int    `json:"size"`
 	Truncated bool   `json:"truncated"`
-	Content   string `json:"content,omitempty"`
+	Content   string `json:"content"`
 }
 
 // FilesDownloadTool returns the definition for moonraker_files_download.
