@@ -19,6 +19,9 @@ linters:
     goconst:
       min-len: 2
       min-occurrences: 3
+      # Table-driven tests repeat string literals (case names, expected values) by
+      # design; hoisting them to constants hurts readability rather than helping.
+      ignore-tests: true
     gocritic:
       disabled-checks:
         - dupImport
