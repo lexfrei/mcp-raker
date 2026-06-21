@@ -77,21 +77,24 @@ func MQTTSubscribeTool() *mcp.Tool {
 }
 
 // NewMQTTSubscribeHandler creates the handler for moonraker_mqtt_subscribe.
-func NewMQTTSubscribeHandler(api moonraker.API) mcp.ToolHandlerFor[MQTTSubscribeParams, map[string]any] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params MQTTSubscribeParams) (*mcp.CallToolResult, map[string]any, error) {
+// An MQTT payload can be any JSON value (a scalar, array, or object), so the
+// result passes through verbatim rather than being normalized — a scalar payload
+// must not be collapsed to an acknowledgement.
+func NewMQTTSubscribeHandler(api moonraker.API) mcp.ToolHandlerFor[MQTTSubscribeParams, any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params MQTTSubscribeParams) (*mcp.CallToolResult, any, error) {
 		valErr := requireString(mqttTopic, params.Topic)
 		if valErr != nil {
-			return nil, map[string]any{}, valErr
+			return nil, nil, valErr
 		}
 
 		qosErr := requireRange("qos", params.QOS, qosMin, qosMax)
 		if qosErr != nil {
-			return nil, map[string]any{}, qosErr
+			return nil, nil, qosErr
 		}
 
 		body := map[string]any{mqttTopic: params.Topic, "qos": params.QOS, "timeout": params.Timeout}
 
-		out, err := decodeResult(api.Post(ctx, "/server/mqtt/subscribe", nil, body))
+		out, err := decodePassthrough(api.Post(ctx, "/server/mqtt/subscribe", nil, body))
 
 		return nil, out, err
 	}

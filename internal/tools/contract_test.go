@@ -117,6 +117,25 @@ func TestContract_APIKeyWrapsScalar(t *testing.T) {
 	}
 }
 
+// TestContract_MQTTSubscribePassesScalarThrough verifies an MQTT payload that is
+// a bare scalar is returned verbatim rather than collapsed to an acknowledgement.
+func TestContract_MQTTSubscribePassesScalarThrough(t *testing.T) {
+	t.Parallel()
+
+	mock := &mockAPI{result: json.RawMessage(`"online"`)}
+
+	params := tools.MQTTSubscribeParams{Topic: "klipper/state"}
+
+	_, out, err := tools.NewMQTTSubscribeHandler(mock)(t.Context(), nil, params)
+	if err != nil {
+		t.Fatalf("handler: %v", err)
+	}
+
+	if out != "online" {
+		t.Errorf("out = %#v, want the scalar payload \"online\" preserved", out)
+	}
+}
+
 // TestContract_ProxyPassesArrayThrough verifies the shape-variable proxy returns
 // an array payload unchanged at the top level.
 func TestContract_ProxyPassesArrayThrough(t *testing.T) {
