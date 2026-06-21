@@ -19,10 +19,10 @@ const (
 
 // MQTTPublishParams defines the parameters for moonraker_mqtt_publish.
 type MQTTPublishParams struct {
-	Topic   string `json:"topic"             jsonschema:"MQTT topic to publish to"`
-	Payload any    `json:"payload,omitempty" jsonschema:"Payload to publish; may be any JSON type"`
-	QOS     int    `json:"qos,omitempty"     jsonschema:"MQTT quality-of-service level 0-2"`
-	Retain  bool   `json:"retain,omitempty"  jsonschema:"When true, the broker retains the message"`
+	Topic   string `json:"topic"            jsonschema:"MQTT topic to publish to"`
+	Payload any    `json:"payload"          jsonschema:"Payload to publish; may be any JSON type, including null or \"\" to clear a retained message"`
+	QOS     int    `json:"qos,omitempty"    jsonschema:"MQTT quality-of-service level 0-2"`
+	Retain  bool   `json:"retain,omitempty" jsonschema:"When true, the broker retains the message"`
 }
 
 // MQTTPublishTool returns the definition for moonraker_mqtt_publish.

@@ -443,7 +443,7 @@ type FilesUploadParams struct {
 	Root       string `json:"root,omitempty"        jsonschema:"File-manager root to upload into, e.g. 'gcodes' (default)"`
 	Path       string `json:"path,omitempty"        jsonschema:"Optional subdirectory within the root"`
 	Filename   string `json:"filename"              jsonschema:"Name to store the uploaded file under, e.g. 'part.gcode'"`
-	Content    string `json:"content,omitempty"     jsonschema:"The full text content of the file to upload"`
+	Content    string `json:"content"               jsonschema:"The full text content of the file to upload; pass an empty string to upload an empty file"`
 	StartPrint bool   `json:"start_print,omitempty" jsonschema:"When true, start printing the file immediately after upload"`
 }
 

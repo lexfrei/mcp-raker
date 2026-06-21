@@ -253,6 +253,8 @@ func TestOptionalParamsNotRequired(t *testing.T) {
 		"moonraker_history_job":  {"uid"},
 		"moonraker_gcode_script": {"script"},
 		"moonraker_db_post_item": {"namespace", "key", "value"},
+		"moonraker_files_upload": {"filename", "content"},
+		"moonraker_mqtt_publish": {"topic", "payload"},
 		"moonraker_wled_set":     {"strip"},
 		"moonraker_sensors_info": {"sensor"},
 	}
