@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"runtime/debug"
 	"syscall"
 	"time"
 
@@ -29,13 +30,26 @@ const (
 	shutdownTimeout   = 5 * time.Second
 )
 
-// version and revision are set via ldflags at build time.
+// defaultVersion and defaultRevision are the unstamped placeholders. resolveBuild
+// treats version == defaultVersion as "not stamped by ldflags" and falls back to
+// the embedded build info.
+const (
+	defaultVersion  = "dev"
+	defaultRevision = "unknown"
+)
+
+// version and revision are set via ldflags at build time (container builds). For
+// `go install` and `go build` from a checkout, resolveBuild fills them in from
+// the embedded build info instead.
 var (
-	version  = "dev"
-	revision = "unknown"
+	version  = defaultVersion
+	revision = defaultRevision
 )
 
 func main() {
+	info, ok := debug.ReadBuildInfo()
+	version, revision = resolveBuild(version, revision, info, ok)
+
 	logger := newLogger()
 
 	err := run(logger)
@@ -43,6 +57,56 @@ func main() {
 		logger.Error("server failed", slog.Any("error", err))
 		os.Exit(1)
 	}
+}
+
+// resolveBuild determines the version and revision to report. ldflags-set values
+// (container builds) win. Otherwise it falls back to the embedded build info, so
+// a `go install module@vX.Y.Z` reports vX.Y.Z and a `go build` from a checkout
+// reports the VCS commit (suffixed -dirty when the tree had uncommitted edits).
+func resolveBuild(version, revision string, info *debug.BuildInfo, ok bool) (string, string) {
+	if version != defaultVersion {
+		return version, revision
+	}
+
+	if !ok || info == nil {
+		return version, revision
+	}
+
+	if info.Main.Version != "" && info.Main.Version != "(devel)" {
+		version = info.Main.Version
+	}
+
+	gotRevision := false
+	modified := false
+
+	for _, setting := range info.Settings {
+		switch setting.Key {
+		case "vcs.revision":
+			if setting.Value != "" {
+				revision = shortRevision(setting.Value)
+				gotRevision = true
+			}
+		case "vcs.modified":
+			modified = setting.Value == "true"
+		}
+	}
+
+	if gotRevision && modified {
+		revision += "-dirty"
+	}
+
+	return version, revision
+}
+
+// shortRevision trims a git commit hash to a readable prefix.
+func shortRevision(rev string) string {
+	const shortLen = 12
+
+	if len(rev) > shortLen {
+		return rev[:shortLen]
+	}
+
+	return rev
 }
 
 // newLogger builds the structured JSON logger. Logs go to stderr because stdout

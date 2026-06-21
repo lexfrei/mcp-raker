@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"runtime/debug"
 	"slices"
 	"strings"
 	"testing"
@@ -258,6 +259,79 @@ func TestOptionalParamsNotRequired(t *testing.T) {
 		if !slices.Contains(required(name), field) {
 			t.Errorf("%s: required = %v, want it to include %q", name, required(name), field)
 		}
+	}
+}
+
+func TestResolveBuild(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		version      string
+		revision     string
+		info         *debug.BuildInfo
+		ok           bool
+		wantVersion  string
+		wantRevision string
+	}{
+		{
+			name:     "ldflags win over build info",
+			version:  "1.2.3",
+			revision: "abcdef",
+			info:     &debug.BuildInfo{Main: debug.Module{Version: "v9.9.9"}},
+			ok:       true,
+
+			wantVersion:  "1.2.3",
+			wantRevision: "abcdef",
+		},
+		{
+			name:     "go install stamps the module version",
+			version:  "dev",
+			revision: "unknown",
+			info:     &debug.BuildInfo{Main: debug.Module{Version: "v0.2.0"}},
+			ok:       true,
+
+			wantVersion:  "v0.2.0",
+			wantRevision: "unknown",
+		},
+		{
+			name:     "vcs revision is shortened and marked dirty",
+			version:  "dev",
+			revision: "unknown",
+			info: &debug.BuildInfo{
+				Main: debug.Module{Version: "(devel)"},
+				Settings: []debug.BuildSetting{
+					{Key: "vcs.revision", Value: "0123456789abcdef0123"},
+					{Key: "vcs.modified", Value: "true"},
+				},
+			},
+			ok: true,
+
+			wantVersion:  "dev",
+			wantRevision: "0123456789ab-dirty",
+		},
+		{
+			name:     "no build info keeps defaults",
+			version:  "dev",
+			revision: "unknown",
+			info:     nil,
+			ok:       false,
+
+			wantVersion:  "dev",
+			wantRevision: "unknown",
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			gotVersion, gotRevision := resolveBuild(testCase.version, testCase.revision, testCase.info, testCase.ok)
+			if gotVersion != testCase.wantVersion || gotRevision != testCase.wantRevision {
+				t.Errorf("resolveBuild = (%q, %q), want (%q, %q)",
+					gotVersion, gotRevision, testCase.wantVersion, testCase.wantRevision)
+			}
+		})
 	}
 }
 
