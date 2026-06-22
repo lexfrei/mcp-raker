@@ -195,7 +195,7 @@ func NewEmergencyStopHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map
 	}
 }
 
-// PrinterRestartTool returns the definition for moonraker_printer_restart (admin).
+// PrinterRestartTool returns the definition for moonraker_printer_restart.
 func PrinterRestartTool() *mcp.Tool {
 	return &mcp.Tool{
 		Name:        "moonraker_printer_restart",
@@ -217,7 +217,7 @@ func NewPrinterRestartHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, ma
 	}
 }
 
-// FirmwareRestartTool returns the definition for moonraker_firmware_restart (admin).
+// FirmwareRestartTool returns the definition for moonraker_firmware_restart.
 func FirmwareRestartTool() *mcp.Tool {
 	return &mcp.Tool{
 		Name: "moonraker_firmware_restart",
