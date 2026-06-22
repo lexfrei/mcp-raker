@@ -40,7 +40,7 @@ Admin (require `MOONRAKER_ENABLE_ADMIN=true`):
 
 ## Output
 
-Every tool returns its result as a top-level JSON object — read the fields directly, never through a `result` wrapper. Endpoints that return a bare list upstream wrap it under a descriptive key (`files`, `roots`, `thumbnails`); action tools that only succeed return `{"ok": true}`. The shape-variable proxy tools return the upstream payload under a single key so the result stays a JSON object even when the payload is a bare scalar or array: `moonraker_spoolman_proxy` and `moonraker_extensions_request` use `response`, and `moonraker_mqtt_subscribe` uses `payload`.
+Every tool returns its result as a top-level JSON object — read the fields directly, never through a `result` wrapper. Endpoints that return a bare list upstream wrap it under a descriptive key (`files`, `roots`, `thumbnails`); action tools that only succeed return `{"ok": true}`. `moonraker_spoolman_proxy` surfaces Moonraker's v2 proxy envelope (its `response` and `error` fields) at the top level. `moonraker_extensions_request` and `moonraker_mqtt_subscribe`, whose payloads can be any JSON value, wrap it under a single key (`response` and `payload` respectively) so the result stays a JSON object even for a bare scalar or array.
 
 Two reads trim their payload by default to keep an assistant's context small:
 

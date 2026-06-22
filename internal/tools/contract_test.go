@@ -352,17 +352,17 @@ func TestContract_MQTTSubscribePassesScalarThrough(t *testing.T) {
 	}
 }
 
-// TestContract_ProxyPassesArrayThrough verifies the shape-variable proxy returns
-// an array payload unchanged, wrapped under "response" so the structured content
-// stays a JSON object.
-func TestContract_ProxyPassesArrayThrough(t *testing.T) {
+// TestContract_ExtensionsRequestWrapsArray verifies a shape-variable agent
+// response that is a bare array is returned under "response" so the structured
+// content stays a JSON object.
+func TestContract_ExtensionsRequestWrapsArray(t *testing.T) {
 	t.Parallel()
 
 	mock := &mockAPI{result: json.RawMessage(`[{"id":1},{"id":2}]`)}
 
-	params := tools.SpoolmanProxyParams{RequestMethod: "GET", Path: "/v1/spool"}
+	params := tools.ExtensionsRequestParams{Agent: testAgent, Method: "list"}
 
-	_, out, err := tools.NewSpoolmanProxyHandler(mock)(t.Context(), nil, params)
+	_, out, err := tools.NewExtensionsRequestHandler(mock)(t.Context(), nil, params)
 	if err != nil {
 		t.Fatalf("handler: %v", err)
 	}
@@ -374,5 +374,32 @@ func TestContract_ProxyPassesArrayThrough(t *testing.T) {
 
 	if len(arr) != 2 {
 		t.Errorf("array len = %d, want 2", len(arr))
+	}
+}
+
+// TestContract_SpoolmanProxyExposesV2Envelope verifies the proxy surfaces
+// Moonraker's v2 {response, error} envelope at the top level rather than nesting
+// it again under another "response" key (which would hide the error field).
+func TestContract_SpoolmanProxyExposesV2Envelope(t *testing.T) {
+	t.Parallel()
+
+	mock := &mockAPI{result: json.RawMessage(`{"response":{"id":1},"error":null}`)}
+
+	params := tools.SpoolmanProxyParams{RequestMethod: "GET", Path: "/v1/spool/1"}
+
+	_, out, err := tools.NewSpoolmanProxyHandler(mock)(t.Context(), nil, params)
+	if err != nil {
+		t.Fatalf("handler: %v", err)
+	}
+
+	// The error field must be visible at the top level.
+	if _, hasError := out["error"]; !hasError {
+		t.Errorf("out = %v, want a top-level error field", out)
+	}
+
+	// response holds the actual payload, not the whole envelope again.
+	data, ok := out["response"].(map[string]any)
+	if !ok || data["id"] != float64(1) {
+		t.Errorf("out[response] = %v, want the inner payload {id:1}, not a re-nested envelope", out["response"])
 	}
 }
