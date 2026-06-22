@@ -80,9 +80,9 @@ func decodeResult(raw json.RawMessage, err error) (map[string]any, error) {
 }
 
 // decodePassthrough returns the Moonraker payload unchanged, for tools whose
-// response shape varies by request (the Spoolman and extension proxies). Such
-// tools register no output schema, so any JSON value — object, array, or
-// scalar — passes through at the top level.
+// response shape varies by request (the extension-request and MQTT-subscribe
+// proxies). Callers wrap the value under a single key so the structured content
+// stays a JSON object even when the payload is a bare scalar or array.
 func decodePassthrough(raw json.RawMessage, err error) (any, error) {
 	if err != nil {
 		return nil, moonrakerErr("request failed", err)
