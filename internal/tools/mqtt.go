@@ -93,7 +93,12 @@ func NewMQTTSubscribeHandler(api moonraker.API) mcp.ToolHandlerFor[MQTTSubscribe
 			return nil, nil, qosErr
 		}
 
-		body := map[string]any{mqttTopic: params.Topic, "qos": params.QOS, "timeout": params.Timeout}
+		// Only send timeout when set: a zero timeout would make Moonraker give up
+		// immediately instead of waiting for the next message with its own default.
+		body := map[string]any{mqttTopic: params.Topic, "qos": params.QOS}
+		if params.Timeout > 0 {
+			body["timeout"] = params.Timeout
+		}
 
 		value, err := decodePassthrough(api.Post(ctx, "/server/mqtt/subscribe", nil, body))
 		if err != nil {
