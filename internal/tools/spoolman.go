@@ -90,11 +90,12 @@ func SpoolmanProxyTool() *mcp.Tool {
 	}
 }
 
-// NewSpoolmanProxyHandler creates the handler for moonraker_spoolman_proxy.
-// The proxied response shape varies by request, so it passes through unchanged
-// with no output schema.
-func NewSpoolmanProxyHandler(api moonraker.API) mcp.ToolHandlerFor[SpoolmanProxyParams, any] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params SpoolmanProxyParams) (*mcp.CallToolResult, any, error) {
+// NewSpoolmanProxyHandler creates the handler for moonraker_spoolman_proxy. The
+// proxied response shape varies by request, so it is returned verbatim under a
+// "response" key — the wrapper keeps the structured content an object (required
+// by MCP) for scalar or array payloads.
+func NewSpoolmanProxyHandler(api moonraker.API) mcp.ToolHandlerFor[SpoolmanProxyParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params SpoolmanProxyParams) (*mcp.CallToolResult, map[string]any, error) {
 		methodErr := requireString("request_method", params.RequestMethod)
 		if methodErr != nil {
 			return nil, nil, methodErr
@@ -118,8 +119,11 @@ func NewSpoolmanProxyHandler(api moonraker.API) mcp.ToolHandlerFor[SpoolmanProxy
 			body["body"] = params.Body
 		}
 
-		out, err := decodePassthrough(api.Post(ctx, "/server/spoolman/proxy", nil, body))
+		value, err := decodePassthrough(api.Post(ctx, "/server/spoolman/proxy", nil, body))
+		if err != nil {
+			return nil, nil, err
+		}
 
-		return nil, out, err
+		return nil, map[string]any{"response": value}, nil
 	}
 }

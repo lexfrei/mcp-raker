@@ -7,6 +7,220 @@ import (
 	"github.com/lexfrei/mcp-raker/internal/tools"
 )
 
+// TestContract_DataReadsPreserveTopLevel feeds every object-returning data-read
+// tool a representative object fixture and asserts the payload's fields survive
+// at the top level with no "result" envelope. Unlike the per-area call tests
+// (which use a scalar "ok" fixture and so would pass even if a handler silently
+// dropped a real payload), this pins the actual output contract across the whole
+// data-read surface: re-typing any handler back to a collapsing path fails here.
+func TestContract_DataReadsPreserveTopLevel(t *testing.T) {
+	t.Parallel()
+
+	const probe = "probe"
+
+	fixture := json.RawMessage(`{"probe":42}`)
+
+	tests := []struct {
+		name string
+		call func(*mockAPI) (map[string]any, error)
+	}{
+		{"system_info", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewSystemInfoHandler(m)(t.Context(), nil, tools.NoParams{})
+
+			return o, e
+		}},
+		{"proc_stats", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewProcStatsHandler(m)(t.Context(), nil, tools.ProcStatsParams{})
+
+			return o, e
+		}},
+		{"sudo_info", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewSudoInfoHandler(m)(t.Context(), nil, tools.NoParams{})
+
+			return o, e
+		}},
+		{"peripherals_usb", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewPeripheralsUSBHandler(m)(t.Context(), nil, tools.NoParams{})
+
+			return o, e
+		}},
+		{"peripherals_canbus", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewPeripheralsCanbusHandler(m)(t.Context(), nil, tools.PeripheralsCanbusParams{})
+
+			return o, e
+		}},
+		{"update_status", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewUpdateStatusHandler(m)(t.Context(), nil, tools.NoParams{})
+
+			return o, e
+		}},
+		{"power_devices", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewPowerDevicesHandler(m)(t.Context(), nil, tools.NoParams{})
+
+			return o, e
+		}},
+		{"server_config", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewServerConfigHandler(m)(t.Context(), nil, tools.NoParams{})
+
+			return o, e
+		}},
+		{"temperature_store", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewTemperatureStoreHandler(m)(t.Context(), nil, tools.TemperatureStoreParams{})
+
+			return o, e
+		}},
+		{"gcode_store", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewGcodeStoreHandler(m)(t.Context(), nil, tools.GcodeStoreParams{})
+
+			return o, e
+		}},
+		{"query_endstops", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewQueryEndstopsHandler(m)(t.Context(), nil, tools.NoParams{})
+
+			return o, e
+		}},
+		{"gcode_help", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewGcodeHelpHandler(m)(t.Context(), nil, tools.NoParams{})
+
+			return o, e
+		}},
+		{"history_totals", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewHistoryTotalsHandler(m)(t.Context(), nil, tools.NoParams{})
+
+			return o, e
+		}},
+		{"history_list", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewHistoryListHandler(m)(t.Context(), nil, tools.HistoryListParams{})
+
+			return o, e
+		}},
+		{"history_job", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewHistoryJobHandler(m)(t.Context(), nil, tools.HistoryJobParams{UID: "1"})
+
+			return o, e
+		}},
+		{"jobqueue_status", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewJobQueueStatusHandler(m)(t.Context(), nil, tools.NoParams{})
+
+			return o, e
+		}},
+		{"db_list", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewDBListHandler(m)(t.Context(), nil, tools.NoParams{})
+
+			return o, e
+		}},
+		{"db_get_item", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewDBGetItemHandler(m)(t.Context(), nil, tools.DBGetItemParams{Namespace: "ns"})
+
+			return o, e
+		}},
+		{"access_user_info", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewAccessUserInfoHandler(m)(t.Context(), nil, tools.NoParams{})
+
+			return o, e
+		}},
+		{"access_users_list", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewAccessUsersListHandler(m)(t.Context(), nil, tools.NoParams{})
+
+			return o, e
+		}},
+		{"access_info", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewAccessInfoHandler(m)(t.Context(), nil, tools.NoParams{})
+
+			return o, e
+		}},
+		{"announcements_list", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewAnnouncementsListHandler(m)(t.Context(), nil, tools.AnnouncementsListParams{})
+
+			return o, e
+		}},
+		{"announcements_feeds", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewAnnouncementsFeedsHandler(m)(t.Context(), nil, tools.NoParams{})
+
+			return o, e
+		}},
+		{"webcams_list", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewWebcamsListHandler(m)(t.Context(), nil, tools.NoParams{})
+
+			return o, e
+		}},
+		{"webcams_get", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewWebcamsGetHandler(m)(t.Context(), nil, tools.WebcamNameParams{Name: "cam"})
+
+			return o, e
+		}},
+		{"sensors_list", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewSensorsListHandler(m)(t.Context(), nil, tools.SensorsListParams{})
+
+			return o, e
+		}},
+		{"sensors_info", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewSensorsInfoHandler(m)(t.Context(), nil, tools.SensorParams{Sensor: testSensor})
+
+			return o, e
+		}},
+		{"sensors_measurements", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewSensorsMeasurementsHandler(m)(t.Context(), nil, tools.SensorsMeasurementsParams{})
+
+			return o, e
+		}},
+		{"spoolman_status", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewSpoolmanStatusHandler(m)(t.Context(), nil, tools.NoParams{})
+
+			return o, e
+		}},
+		{"spoolman_get_spool", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewSpoolmanGetSpoolHandler(m)(t.Context(), nil, tools.NoParams{})
+
+			return o, e
+		}},
+		{"wled_status", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewWLEDStatusHandler(m)(t.Context(), nil, tools.StripParams{Strip: testStrip})
+
+			return o, e
+		}},
+		{"extensions_list", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewExtensionsListHandler(m)(t.Context(), nil, tools.NoParams{})
+
+			return o, e
+		}},
+		{"analysis_status", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewAnalysisStatusHandler(m)(t.Context(), nil, tools.NoParams{})
+
+			return o, e
+		}},
+		{"files_directory", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewFilesDirectoryHandler(m)(t.Context(), nil, tools.FilesDirectoryParams{})
+
+			return o, e
+		}},
+		{"files_metadata", func(m *mockAPI) (map[string]any, error) {
+			_, o, e := tools.NewFilesMetadataHandler(m)(t.Context(), nil, tools.FilenameParams{Filename: testGcodeFile})
+
+			return o, e
+		}},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			out, err := testCase.call(&mockAPI{result: fixture})
+			if err != nil {
+				t.Fatalf("handler: %v", err)
+			}
+
+			if _, wrapped := out["result"]; wrapped {
+				t.Errorf("output carries a 'result' envelope: %v", out)
+			}
+
+			if out[probe] != float64(42) {
+				t.Errorf("output = %v, want the payload's top-level %q key preserved", out, probe)
+			}
+		})
+	}
+}
+
 // TestContract_DataReadStaysTopLevel verifies a data-read tool returns the
 // Moonraker payload's fields at the top level, with no "result" envelope.
 func TestContract_DataReadStaysTopLevel(t *testing.T) {
@@ -131,13 +345,16 @@ func TestContract_MQTTSubscribePassesScalarThrough(t *testing.T) {
 		t.Fatalf("handler: %v", err)
 	}
 
-	if out != "online" {
-		t.Errorf("out = %#v, want the scalar payload \"online\" preserved", out)
+	// The scalar payload is preserved under an object "payload" key (MCP requires
+	// structured content to be an object).
+	if out["payload"] != "online" {
+		t.Errorf("out = %#v, want payload \"online\" preserved", out)
 	}
 }
 
 // TestContract_ProxyPassesArrayThrough verifies the shape-variable proxy returns
-// an array payload unchanged at the top level.
+// an array payload unchanged, wrapped under "response" so the structured content
+// stays a JSON object.
 func TestContract_ProxyPassesArrayThrough(t *testing.T) {
 	t.Parallel()
 
@@ -150,9 +367,9 @@ func TestContract_ProxyPassesArrayThrough(t *testing.T) {
 		t.Fatalf("handler: %v", err)
 	}
 
-	arr, ok := out.([]any)
+	arr, ok := out["response"].([]any)
 	if !ok {
-		t.Fatalf("output = %T, want []any passthrough", out)
+		t.Fatalf("out[response] = %T, want []any passthrough", out["response"])
 	}
 
 	if len(arr) != 2 {
