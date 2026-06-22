@@ -113,6 +113,28 @@ func TestGet_StatusErrorSurfacesMessage(t *testing.T) {
 	}
 }
 
+func TestGet_NotFoundMarksErrNotFound(t *testing.T) {
+	t.Parallel()
+
+	srv := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
+		writer.WriteHeader(http.StatusNotFound)
+		_, _ = writer.Write([]byte(`{"error":{"code":404,"message":"Not Found"}}`))
+	}))
+	defer srv.Close()
+
+	client := newClient(t, srv, nil)
+
+	_, err := client.Get(t.Context(), "/machine/sensors/list", nil)
+	if !errors.Is(err, moonraker.ErrNotFound) {
+		t.Fatalf("err = %v, want ErrNotFound", err)
+	}
+
+	// A 404 is still an API error so generic handling keeps working.
+	if !errors.Is(err, moonraker.ErrAPI) {
+		t.Fatalf("err = %v, want it to also satisfy ErrAPI", err)
+	}
+}
+
 func TestSend_JWTLoginAndRefreshOn401(t *testing.T) {
 	t.Parallel()
 

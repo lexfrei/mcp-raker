@@ -19,10 +19,10 @@ const (
 
 // MQTTPublishParams defines the parameters for moonraker_mqtt_publish.
 type MQTTPublishParams struct {
-	Topic   string `json:"topic"   jsonschema:"MQTT topic to publish to"`
-	Payload any    `json:"payload" jsonschema:"Payload to publish; may be any JSON type"`
-	QOS     int    `json:"qos"     jsonschema:"MQTT quality-of-service level 0-2"`
-	Retain  bool   `json:"retain"  jsonschema:"When true, the broker retains the message"`
+	Topic   string `json:"topic"            jsonschema:"MQTT topic to publish to"`
+	Payload any    `json:"payload"          jsonschema:"Payload to publish; may be any JSON type, including null or \"\" to clear a retained message"`
+	QOS     int    `json:"qos,omitempty"    jsonschema:"MQTT quality-of-service level 0-2"`
+	Retain  bool   `json:"retain,omitempty" jsonschema:"When true, the broker retains the message"`
 }
 
 // MQTTPublishTool returns the definition for moonraker_mqtt_publish.
@@ -35,16 +35,16 @@ func MQTTPublishTool() *mcp.Tool {
 }
 
 // NewMQTTPublishHandler creates the handler for moonraker_mqtt_publish.
-func NewMQTTPublishHandler(api moonraker.API) mcp.ToolHandlerFor[MQTTPublishParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params MQTTPublishParams) (*mcp.CallToolResult, RawResult, error) {
+func NewMQTTPublishHandler(api moonraker.API) mcp.ToolHandlerFor[MQTTPublishParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params MQTTPublishParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(mqttTopic, params.Topic)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
 		qosErr := requireRange("qos", params.QOS, qosMin, qosMax)
 		if qosErr != nil {
-			return nil, RawResult{}, qosErr
+			return nil, map[string]any{}, qosErr
 		}
 
 		body := map[string]any{
@@ -54,7 +54,7 @@ func NewMQTTPublishHandler(api moonraker.API) mcp.ToolHandlerFor[MQTTPublishPara
 			"retain":  params.Retain,
 		}
 
-		out, err := decodeRaw(api.Post(ctx, "/server/mqtt/publish", nil, body))
+		out, err := decodeResult(api.Post(ctx, "/server/mqtt/publish", nil, body))
 
 		return nil, out, err
 	}
@@ -62,9 +62,9 @@ func NewMQTTPublishHandler(api moonraker.API) mcp.ToolHandlerFor[MQTTPublishPara
 
 // MQTTSubscribeParams defines the parameters for moonraker_mqtt_subscribe.
 type MQTTSubscribeParams struct {
-	Topic   string  `json:"topic"   jsonschema:"MQTT topic to read a single value from"`
-	QOS     int     `json:"qos"     jsonschema:"MQTT quality-of-service level 0-2"`
-	Timeout float64 `json:"timeout" jsonschema:"Seconds to wait for a message before giving up"`
+	Topic   string  `json:"topic"             jsonschema:"MQTT topic to read a single value from"`
+	QOS     int     `json:"qos,omitempty"     jsonschema:"MQTT quality-of-service level 0-2"`
+	Timeout float64 `json:"timeout,omitempty" jsonschema:"Seconds to wait for a message before giving up"`
 }
 
 // MQTTSubscribeTool returns the definition for moonraker_mqtt_subscribe.
@@ -77,22 +77,34 @@ func MQTTSubscribeTool() *mcp.Tool {
 }
 
 // NewMQTTSubscribeHandler creates the handler for moonraker_mqtt_subscribe.
-func NewMQTTSubscribeHandler(api moonraker.API) mcp.ToolHandlerFor[MQTTSubscribeParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params MQTTSubscribeParams) (*mcp.CallToolResult, RawResult, error) {
+// An MQTT payload can be any JSON value (a scalar, array, or object), so it is
+// returned verbatim under a "payload" key. The wrapper keeps the structured
+// content an object (required by MCP) while a scalar payload is not collapsed to
+// an acknowledgement.
+func NewMQTTSubscribeHandler(api moonraker.API) mcp.ToolHandlerFor[MQTTSubscribeParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params MQTTSubscribeParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(mqttTopic, params.Topic)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, nil, valErr
 		}
 
 		qosErr := requireRange("qos", params.QOS, qosMin, qosMax)
 		if qosErr != nil {
-			return nil, RawResult{}, qosErr
+			return nil, nil, qosErr
 		}
 
-		body := map[string]any{mqttTopic: params.Topic, "qos": params.QOS, "timeout": params.Timeout}
+		// Only send timeout when set: a zero timeout would make Moonraker give up
+		// immediately instead of waiting for the next message with its own default.
+		body := map[string]any{mqttTopic: params.Topic, "qos": params.QOS}
+		if params.Timeout > 0 {
+			body["timeout"] = params.Timeout
+		}
 
-		out, err := decodeRaw(api.Post(ctx, "/server/mqtt/subscribe", nil, body))
+		value, err := decodePassthrough(api.Post(ctx, "/server/mqtt/subscribe", nil, body))
+		if err != nil {
+			return nil, nil, err
+		}
 
-		return nil, out, err
+		return nil, map[string]any{"payload": value}, nil
 	}
 }

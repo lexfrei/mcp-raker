@@ -18,9 +18,9 @@ func ExtensionsListTool() *mcp.Tool {
 }
 
 // NewExtensionsListHandler creates the handler for moonraker_extensions_list.
-func NewExtensionsListHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Get(ctx, "/server/extensions/list", nil))
+func NewExtensionsListHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Get(ctx, "/server/extensions/list", nil))
 
 		return nil, out, err
 	}
@@ -28,9 +28,9 @@ func NewExtensionsListHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, Ra
 
 // ExtensionsRequestParams defines the parameters for moonraker_extensions_request.
 type ExtensionsRequestParams struct {
-	Agent     string `json:"agent"     jsonschema:"Name of the registered agent or extension to call"`
-	Method    string `json:"method"    jsonschema:"Method the agent exposes"`
-	Arguments any    `json:"arguments" jsonschema:"Optional arguments to pass to the agent method"`
+	Agent     string `json:"agent"               jsonschema:"Name of the registered agent or extension to call"`
+	Method    string `json:"method"              jsonschema:"Method the agent exposes"`
+	Arguments any    `json:"arguments,omitempty" jsonschema:"Optional arguments to pass to the agent method"`
 }
 
 // ExtensionsRequestTool returns the definition for moonraker_extensions_request.
@@ -43,16 +43,19 @@ func ExtensionsRequestTool() *mcp.Tool {
 }
 
 // NewExtensionsRequestHandler creates the handler for moonraker_extensions_request.
-func NewExtensionsRequestHandler(api moonraker.API) mcp.ToolHandlerFor[ExtensionsRequestParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params ExtensionsRequestParams) (*mcp.CallToolResult, RawResult, error) {
+// The agent's response shape is arbitrary, so it is returned verbatim under a
+// "response" key — the wrapper keeps the structured content an object (required
+// by MCP) for scalar or array payloads.
+func NewExtensionsRequestHandler(api moonraker.API) mcp.ToolHandlerFor[ExtensionsRequestParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params ExtensionsRequestParams) (*mcp.CallToolResult, map[string]any, error) {
 		agentErr := requireString("agent", params.Agent)
 		if agentErr != nil {
-			return nil, RawResult{}, agentErr
+			return nil, nil, agentErr
 		}
 
 		methodErr := requireString("method", params.Method)
 		if methodErr != nil {
-			return nil, RawResult{}, methodErr
+			return nil, nil, methodErr
 		}
 
 		body := map[string]any{"agent": params.Agent, "method": params.Method}
@@ -60,8 +63,11 @@ func NewExtensionsRequestHandler(api moonraker.API) mcp.ToolHandlerFor[Extension
 			body["arguments"] = params.Arguments
 		}
 
-		out, err := decodeRaw(api.Post(ctx, "/server/extensions/request", nil, body))
+		value, err := decodePassthrough(api.Post(ctx, "/server/extensions/request", nil, body))
+		if err != nil {
+			return nil, nil, err
+		}
 
-		return nil, out, err
+		return nil, map[string]any{"response": value}, nil
 	}
 }

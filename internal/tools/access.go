@@ -19,9 +19,9 @@ func AccessUserInfoTool() *mcp.Tool {
 }
 
 // NewAccessUserInfoHandler creates the handler for moonraker_access_user_info.
-func NewAccessUserInfoHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Get(ctx, "/access/user", nil))
+func NewAccessUserInfoHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Get(ctx, "/access/user", nil))
 
 		return nil, out, err
 	}
@@ -37,9 +37,9 @@ func AccessUsersListTool() *mcp.Tool {
 }
 
 // NewAccessUsersListHandler creates the handler for moonraker_access_users_list.
-func NewAccessUsersListHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Get(ctx, "/access/users/list", nil))
+func NewAccessUsersListHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Get(ctx, "/access/users/list", nil))
 
 		return nil, out, err
 	}
@@ -55,12 +55,18 @@ func AccessInfoTool() *mcp.Tool {
 }
 
 // NewAccessInfoHandler creates the handler for moonraker_access_info.
-func NewAccessInfoHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Get(ctx, "/access/info", nil))
+func NewAccessInfoHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Get(ctx, "/access/info", nil))
 
 		return nil, out, err
 	}
+}
+
+// APIKeyResult is the output of the API-key tools. Moonraker returns the key as
+// a bare string, wrapped here under an "api_key" key so the result is an object.
+type APIKeyResult struct {
+	APIKey string `json:"api_key"`
 }
 
 // AccessAPIKeyTool returns the definition for moonraker_access_api_key.
@@ -73,11 +79,11 @@ func AccessAPIKeyTool() *mcp.Tool {
 }
 
 // NewAccessAPIKeyHandler creates the handler for moonraker_access_api_key.
-func NewAccessAPIKeyHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Get(ctx, "/access/api_key", nil))
+func NewAccessAPIKeyHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, APIKeyResult] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, APIKeyResult, error) {
+		key, err := decodeTyped[string](api.Get(ctx, "/access/api_key", nil))
 
-		return nil, out, err
+		return nil, APIKeyResult{APIKey: key}, err
 	}
 }
 
@@ -97,21 +103,21 @@ func AccessCreateUserTool() *mcp.Tool {
 }
 
 // NewAccessCreateUserHandler creates the handler for moonraker_access_create_user.
-func NewAccessCreateUserHandler(api moonraker.API) mcp.ToolHandlerFor[AccessCreateUserParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params AccessCreateUserParams) (*mcp.CallToolResult, RawResult, error) {
+func NewAccessCreateUserHandler(api moonraker.API) mcp.ToolHandlerFor[AccessCreateUserParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params AccessCreateUserParams) (*mcp.CallToolResult, map[string]any, error) {
 		userErr := requireString(paramUsername, params.Username)
 		if userErr != nil {
-			return nil, RawResult{}, userErr
+			return nil, map[string]any{}, userErr
 		}
 
 		passErr := requireString(paramPassword, params.Password)
 		if passErr != nil {
-			return nil, RawResult{}, passErr
+			return nil, map[string]any{}, passErr
 		}
 
 		body := map[string]any{paramUsername: params.Username, paramPassword: params.Password}
 
-		out, err := decodeRaw(api.Post(ctx, "/access/user", nil, body))
+		out, err := decodeResult(api.Post(ctx, "/access/user", nil, body))
 
 		return nil, out, err
 	}
@@ -132,14 +138,14 @@ func AccessDeleteUserTool() *mcp.Tool {
 }
 
 // NewAccessDeleteUserHandler creates the handler for moonraker_access_delete_user.
-func NewAccessDeleteUserHandler(api moonraker.API) mcp.ToolHandlerFor[AccessDeleteUserParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params AccessDeleteUserParams) (*mcp.CallToolResult, RawResult, error) {
+func NewAccessDeleteUserHandler(api moonraker.API) mcp.ToolHandlerFor[AccessDeleteUserParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params AccessDeleteUserParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramUsername, params.Username)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
-		out, err := decodeRaw(api.Delete(ctx, "/access/user", url.Values{paramUsername: {params.Username}}))
+		out, err := decodeResult(api.Delete(ctx, "/access/user", url.Values{paramUsername: {params.Username}}))
 
 		return nil, out, err
 	}
@@ -161,21 +167,21 @@ func AccessUserPasswordTool() *mcp.Tool {
 }
 
 // NewAccessUserPasswordHandler creates the handler for moonraker_access_user_password.
-func NewAccessUserPasswordHandler(api moonraker.API) mcp.ToolHandlerFor[AccessUserPasswordParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params AccessUserPasswordParams) (*mcp.CallToolResult, RawResult, error) {
+func NewAccessUserPasswordHandler(api moonraker.API) mcp.ToolHandlerFor[AccessUserPasswordParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params AccessUserPasswordParams) (*mcp.CallToolResult, map[string]any, error) {
 		passErr := requireString(paramPassword, params.Password)
 		if passErr != nil {
-			return nil, RawResult{}, passErr
+			return nil, map[string]any{}, passErr
 		}
 
 		newErr := requireString("new_password", params.NewPassword)
 		if newErr != nil {
-			return nil, RawResult{}, newErr
+			return nil, map[string]any{}, newErr
 		}
 
 		body := map[string]any{paramPassword: params.Password, "new_password": params.NewPassword}
 
-		out, err := decodeRaw(api.Post(ctx, "/access/user/password", nil, body))
+		out, err := decodeResult(api.Post(ctx, "/access/user/password", nil, body))
 
 		return nil, out, err
 	}
@@ -191,10 +197,10 @@ func AccessCreateAPIKeyTool() *mcp.Tool {
 }
 
 // NewAccessCreateAPIKeyHandler creates the handler for moonraker_access_create_api_key.
-func NewAccessCreateAPIKeyHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Post(ctx, "/access/api_key", nil, nil))
+func NewAccessCreateAPIKeyHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, APIKeyResult] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, APIKeyResult, error) {
+		key, err := decodeTyped[string](api.Post(ctx, "/access/api_key", nil, nil))
 
-		return nil, out, err
+		return nil, APIKeyResult{APIKey: key}, err
 	}
 }

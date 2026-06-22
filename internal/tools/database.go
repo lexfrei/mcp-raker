@@ -19,9 +19,9 @@ func DBListTool() *mcp.Tool {
 }
 
 // NewDBListHandler creates the handler for moonraker_db_list.
-func NewDBListHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Get(ctx, "/server/database/list", nil))
+func NewDBListHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Get(ctx, "/server/database/list", nil))
 
 		return nil, out, err
 	}
@@ -29,8 +29,8 @@ func NewDBListHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult]
 
 // DBGetItemParams defines the parameters for moonraker_db_get_item.
 type DBGetItemParams struct {
-	Namespace string `json:"namespace" jsonschema:"Database namespace to read from"`
-	Key       string `json:"key"       jsonschema:"Dotted key within the namespace; omit to return the whole namespace"`
+	Namespace string `json:"namespace"     jsonschema:"Database namespace to read from"`
+	Key       string `json:"key,omitempty" jsonschema:"Dotted key within the namespace; omit to return the whole namespace"`
 }
 
 // DBGetItemTool returns the definition for moonraker_db_get_item.
@@ -43,11 +43,11 @@ func DBGetItemTool() *mcp.Tool {
 }
 
 // NewDBGetItemHandler creates the handler for moonraker_db_get_item.
-func NewDBGetItemHandler(api moonraker.API) mcp.ToolHandlerFor[DBGetItemParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params DBGetItemParams) (*mcp.CallToolResult, RawResult, error) {
+func NewDBGetItemHandler(api moonraker.API) mcp.ToolHandlerFor[DBGetItemParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params DBGetItemParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramNamespace, params.Namespace)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
 		query := url.Values{paramNamespace: {params.Namespace}}
@@ -55,13 +55,16 @@ func NewDBGetItemHandler(api moonraker.API) mcp.ToolHandlerFor[DBGetItemParams, 
 			query.Set(paramKey, params.Key)
 		}
 
-		out, err := decodeRaw(api.Get(ctx, "/server/database/item", query))
+		out, err := decodeResult(api.Get(ctx, "/server/database/item", query))
 
 		return nil, out, err
 	}
 }
 
-// DBPostItemParams defines the parameters for moonraker_db_post_item.
+// DBPostItemParams defines the parameters for moonraker_db_post_item. Value has
+// no omitempty: a write must carry a value (which may itself be JSON null), so it
+// stays required in the schema rather than letting a client omit it and store
+// null by accident.
 type DBPostItemParams struct {
 	Namespace string `json:"namespace" jsonschema:"Database namespace to write to"`
 	Key       string `json:"key"       jsonschema:"Dotted key within the namespace"`
@@ -78,21 +81,21 @@ func DBPostItemTool() *mcp.Tool {
 }
 
 // NewDBPostItemHandler creates the handler for moonraker_db_post_item.
-func NewDBPostItemHandler(api moonraker.API) mcp.ToolHandlerFor[DBPostItemParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params DBPostItemParams) (*mcp.CallToolResult, RawResult, error) {
+func NewDBPostItemHandler(api moonraker.API) mcp.ToolHandlerFor[DBPostItemParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params DBPostItemParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramNamespace, params.Namespace)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
 		keyErr := requireString(paramKey, params.Key)
 		if keyErr != nil {
-			return nil, RawResult{}, keyErr
+			return nil, map[string]any{}, keyErr
 		}
 
 		body := map[string]any{paramNamespace: params.Namespace, paramKey: params.Key, paramValue: params.Value}
 
-		out, err := decodeRaw(api.Post(ctx, "/server/database/item", nil, body))
+		out, err := decodeResult(api.Post(ctx, "/server/database/item", nil, body))
 
 		return nil, out, err
 	}
@@ -114,21 +117,21 @@ func DBDeleteItemTool() *mcp.Tool {
 }
 
 // NewDBDeleteItemHandler creates the handler for moonraker_db_delete_item.
-func NewDBDeleteItemHandler(api moonraker.API) mcp.ToolHandlerFor[DBDeleteItemParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params DBDeleteItemParams) (*mcp.CallToolResult, RawResult, error) {
+func NewDBDeleteItemHandler(api moonraker.API) mcp.ToolHandlerFor[DBDeleteItemParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params DBDeleteItemParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramNamespace, params.Namespace)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
 		keyErr := requireString(paramKey, params.Key)
 		if keyErr != nil {
-			return nil, RawResult{}, keyErr
+			return nil, map[string]any{}, keyErr
 		}
 
 		query := url.Values{paramNamespace: {params.Namespace}, paramKey: {params.Key}}
 
-		out, err := decodeRaw(api.Delete(ctx, "/server/database/item", query))
+		out, err := decodeResult(api.Delete(ctx, "/server/database/item", query))
 
 		return nil, out, err
 	}
@@ -136,7 +139,7 @@ func NewDBDeleteItemHandler(api moonraker.API) mcp.ToolHandlerFor[DBDeleteItemPa
 
 // DBBackupParams defines the parameters for moonraker_db_backup.
 type DBBackupParams struct {
-	Filename string `json:"filename" jsonschema:"Optional backup filename; omit to use the server default"`
+	Filename string `json:"filename,omitempty" jsonschema:"Optional backup filename; omit to use the server default"`
 }
 
 // DBBackupTool returns the definition for moonraker_db_backup.
@@ -149,14 +152,14 @@ func DBBackupTool() *mcp.Tool {
 }
 
 // NewDBBackupHandler creates the handler for moonraker_db_backup.
-func NewDBBackupHandler(api moonraker.API) mcp.ToolHandlerFor[DBBackupParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params DBBackupParams) (*mcp.CallToolResult, RawResult, error) {
+func NewDBBackupHandler(api moonraker.API) mcp.ToolHandlerFor[DBBackupParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params DBBackupParams) (*mcp.CallToolResult, map[string]any, error) {
 		query := url.Values{}
 		if params.Filename != "" {
 			query.Set(paramFilename, params.Filename)
 		}
 
-		out, err := decodeRaw(api.Post(ctx, "/server/database/backup", query, nil))
+		out, err := decodeResult(api.Post(ctx, "/server/database/backup", query, nil))
 
 		return nil, out, err
 	}
@@ -172,9 +175,9 @@ func DBCompactTool() *mcp.Tool {
 }
 
 // NewDBCompactHandler creates the handler for moonraker_db_compact.
-func NewDBCompactHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Post(ctx, "/server/database/compact", nil, nil))
+func NewDBCompactHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Post(ctx, "/server/database/compact", nil, nil))
 
 		return nil, out, err
 	}

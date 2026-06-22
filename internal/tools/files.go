@@ -65,7 +65,7 @@ type FilesListResult struct {
 
 // FilesListParams defines the parameters for moonraker_files_list.
 type FilesListParams struct {
-	Root string `json:"root" jsonschema:"File-manager root to list, e.g. 'gcodes' (default), 'config', or 'logs'"`
+	Root string `json:"root,omitempty" jsonschema:"File-manager root to list, e.g. 'gcodes' (default), 'config', or 'logs'"`
 }
 
 // FilesListTool returns the definition for moonraker_files_list.
@@ -90,8 +90,8 @@ func NewFilesListHandler(api moonraker.API) mcp.ToolHandlerFor[FilesListParams, 
 
 // FilesDirectoryParams defines the parameters for moonraker_files_directory.
 type FilesDirectoryParams struct {
-	Path     string `json:"path"     jsonschema:"Directory path to list, e.g. 'gcodes' (default) or 'gcodes/subdir'"`
-	Extended bool   `json:"extended" jsonschema:"When true, include gcode metadata for each file"`
+	Path     string `json:"path,omitempty"     jsonschema:"Directory path to list, e.g. 'gcodes' (default) or 'gcodes/subdir'"`
+	Extended bool   `json:"extended,omitempty" jsonschema:"When true, include gcode metadata for each file"`
 }
 
 // FilesDirectoryTool returns the definition for moonraker_files_directory.
@@ -104,17 +104,24 @@ func FilesDirectoryTool() *mcp.Tool {
 }
 
 // NewFilesDirectoryHandler creates the handler for moonraker_files_directory.
-func NewFilesDirectoryHandler(api moonraker.API) mcp.ToolHandlerFor[FilesDirectoryParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params FilesDirectoryParams) (*mcp.CallToolResult, RawResult, error) {
+func NewFilesDirectoryHandler(api moonraker.API) mcp.ToolHandlerFor[FilesDirectoryParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params FilesDirectoryParams) (*mcp.CallToolResult, map[string]any, error) {
 		query := url.Values{paramPath: {rootOrDefault(params.Path)}}
 		if params.Extended {
 			query.Set("extended", "true")
 		}
 
-		out, err := decodeRaw(api.Get(ctx, "/server/files/directory", query))
+		out, err := decodeResult(api.Get(ctx, "/server/files/directory", query))
 
 		return nil, out, err
 	}
+}
+
+// FilesRootsResult is the output of moonraker_files_roots. Moonraker returns a
+// bare array, which MCP cannot expose as top-level structured content, so the
+// roots are wrapped under a "roots" key.
+type FilesRootsResult struct {
+	Roots []map[string]any `json:"roots"`
 }
 
 // FilesRootsTool returns the definition for moonraker_files_roots.
@@ -127,11 +134,11 @@ func FilesRootsTool() *mcp.Tool {
 }
 
 // NewFilesRootsHandler creates the handler for moonraker_files_roots.
-func NewFilesRootsHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Get(ctx, "/server/files/roots", nil))
+func NewFilesRootsHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, FilesRootsResult] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, FilesRootsResult, error) {
+		roots, err := decodeTyped[[]map[string]any](api.Get(ctx, "/server/files/roots", nil))
 
-		return nil, out, err
+		return nil, FilesRootsResult{Roots: roots}, err
 	}
 }
 
@@ -150,14 +157,14 @@ func FilesMetadataTool() *mcp.Tool {
 }
 
 // NewFilesMetadataHandler creates the handler for moonraker_files_metadata.
-func NewFilesMetadataHandler(api moonraker.API) mcp.ToolHandlerFor[FilenameParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params FilenameParams) (*mcp.CallToolResult, RawResult, error) {
+func NewFilesMetadataHandler(api moonraker.API) mcp.ToolHandlerFor[FilenameParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params FilenameParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramFilename, params.Filename)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
-		out, err := decodeRaw(api.Get(ctx, "/server/files/metadata", url.Values{paramFilename: {params.Filename}}))
+		out, err := decodeResult(api.Get(ctx, "/server/files/metadata", url.Values{paramFilename: {params.Filename}}))
 
 		return nil, out, err
 	}
@@ -173,17 +180,23 @@ func FilesMetascanTool() *mcp.Tool {
 }
 
 // NewFilesMetascanHandler creates the handler for moonraker_files_metascan.
-func NewFilesMetascanHandler(api moonraker.API) mcp.ToolHandlerFor[FilenameParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params FilenameParams) (*mcp.CallToolResult, RawResult, error) {
+func NewFilesMetascanHandler(api moonraker.API) mcp.ToolHandlerFor[FilenameParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params FilenameParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramFilename, params.Filename)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
-		out, err := decodeRaw(api.Post(ctx, "/server/files/metascan", url.Values{paramFilename: {params.Filename}}, nil))
+		out, err := decodeResult(api.Post(ctx, "/server/files/metascan", url.Values{paramFilename: {params.Filename}}, nil))
 
 		return nil, out, err
 	}
+}
+
+// FileThumbnailsResult is the output of moonraker_files_thumbnails. Moonraker
+// returns a bare array of thumbnails, wrapped here under a "thumbnails" key.
+type FileThumbnailsResult struct {
+	Thumbnails []map[string]any `json:"thumbnails"`
 }
 
 // FilesThumbnailsTool returns the definition for moonraker_files_thumbnails.
@@ -196,23 +209,23 @@ func FilesThumbnailsTool() *mcp.Tool {
 }
 
 // NewFilesThumbnailsHandler creates the handler for moonraker_files_thumbnails.
-func NewFilesThumbnailsHandler(api moonraker.API) mcp.ToolHandlerFor[FilenameParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params FilenameParams) (*mcp.CallToolResult, RawResult, error) {
+func NewFilesThumbnailsHandler(api moonraker.API) mcp.ToolHandlerFor[FilenameParams, FileThumbnailsResult] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params FilenameParams) (*mcp.CallToolResult, FileThumbnailsResult, error) {
 		valErr := requireString(paramFilename, params.Filename)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, FileThumbnailsResult{}, valErr
 		}
 
-		out, err := decodeRaw(api.Get(ctx, "/server/files/thumbnails", url.Values{paramFilename: {params.Filename}}))
+		thumbs, err := decodeTyped[[]map[string]any](api.Get(ctx, "/server/files/thumbnails", url.Values{paramFilename: {params.Filename}}))
 
-		return nil, out, err
+		return nil, FileThumbnailsResult{Thumbnails: thumbs}, err
 	}
 }
 
 // PathParams names a directory path within a file-manager root.
 type PathParams struct {
-	Path  string `json:"path"  jsonschema:"Directory path including its root, e.g. 'gcodes/new_folder'"`
-	Force bool   `json:"force" jsonschema:"When true, delete the directory even if it is not empty"`
+	Path  string `json:"path"            jsonschema:"Directory path including its root, e.g. 'gcodes/new_folder'"`
+	Force bool   `json:"force,omitempty" jsonschema:"When true, delete the directory even if it is not empty"`
 }
 
 // FilesCreateDirectoryTool returns the definition for moonraker_files_create_directory.
@@ -225,14 +238,14 @@ func FilesCreateDirectoryTool() *mcp.Tool {
 }
 
 // NewFilesCreateDirectoryHandler creates the handler for moonraker_files_create_directory.
-func NewFilesCreateDirectoryHandler(api moonraker.API) mcp.ToolHandlerFor[PathParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params PathParams) (*mcp.CallToolResult, RawResult, error) {
+func NewFilesCreateDirectoryHandler(api moonraker.API) mcp.ToolHandlerFor[PathParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params PathParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramPath, params.Path)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
-		out, err := decodeRaw(api.Post(ctx, "/server/files/directory", url.Values{paramPath: {params.Path}}, nil))
+		out, err := decodeResult(api.Post(ctx, "/server/files/directory", url.Values{paramPath: {params.Path}}, nil))
 
 		return nil, out, err
 	}
@@ -248,11 +261,11 @@ func FilesDeleteDirectoryTool() *mcp.Tool {
 }
 
 // NewFilesDeleteDirectoryHandler creates the handler for moonraker_files_delete_directory.
-func NewFilesDeleteDirectoryHandler(api moonraker.API) mcp.ToolHandlerFor[PathParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params PathParams) (*mcp.CallToolResult, RawResult, error) {
+func NewFilesDeleteDirectoryHandler(api moonraker.API) mcp.ToolHandlerFor[PathParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params PathParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramPath, params.Path)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
 		query := url.Values{paramPath: {params.Path}}
@@ -260,7 +273,7 @@ func NewFilesDeleteDirectoryHandler(api moonraker.API) mcp.ToolHandlerFor[PathPa
 			query.Set("force", "true")
 		}
 
-		out, err := decodeRaw(api.Delete(ctx, "/server/files/directory", query))
+		out, err := decodeResult(api.Delete(ctx, "/server/files/directory", query))
 
 		return nil, out, err
 	}
@@ -292,16 +305,16 @@ func FilesMoveTool() *mcp.Tool {
 }
 
 // NewFilesMoveHandler creates the handler for moonraker_files_move.
-func NewFilesMoveHandler(api moonraker.API) mcp.ToolHandlerFor[SourceDestParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params SourceDestParams) (*mcp.CallToolResult, RawResult, error) {
+func NewFilesMoveHandler(api moonraker.API) mcp.ToolHandlerFor[SourceDestParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params SourceDestParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := validateSourceDest(params)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
 		query := url.Values{paramSource: {params.Source}, paramDest: {params.Dest}}
 
-		out, err := decodeRaw(api.Post(ctx, "/server/files/move", query, nil))
+		out, err := decodeResult(api.Post(ctx, "/server/files/move", query, nil))
 
 		return nil, out, err
 	}
@@ -317,16 +330,16 @@ func FilesCopyTool() *mcp.Tool {
 }
 
 // NewFilesCopyHandler creates the handler for moonraker_files_copy.
-func NewFilesCopyHandler(api moonraker.API) mcp.ToolHandlerFor[SourceDestParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params SourceDestParams) (*mcp.CallToolResult, RawResult, error) {
+func NewFilesCopyHandler(api moonraker.API) mcp.ToolHandlerFor[SourceDestParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params SourceDestParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := validateSourceDest(params)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
 		query := url.Values{paramSource: {params.Source}, paramDest: {params.Dest}}
 
-		out, err := decodeRaw(api.Post(ctx, "/server/files/copy", query, nil))
+		out, err := decodeResult(api.Post(ctx, "/server/files/copy", query, nil))
 
 		return nil, out, err
 	}
@@ -334,9 +347,9 @@ func NewFilesCopyHandler(api moonraker.API) mcp.ToolHandlerFor[SourceDestParams,
 
 // FilesZipParams defines the parameters for moonraker_files_zip.
 type FilesZipParams struct {
-	Items     []string `json:"items"      jsonschema:"Files or directories (including their root) to add to the archive"`
-	Dest      string   `json:"dest"       jsonschema:"Destination path for the zip file; omit to use a default location"`
-	StoreOnly bool     `json:"store_only" jsonschema:"When true, store without compression"`
+	Items     []string `json:"items"                jsonschema:"Files or directories (including their root) to add to the archive"`
+	Dest      string   `json:"dest,omitempty"       jsonschema:"Destination path for the zip file; omit to use a default location"`
+	StoreOnly bool     `json:"store_only,omitempty" jsonschema:"When true, store without compression"`
 }
 
 // FilesZipTool returns the definition for moonraker_files_zip.
@@ -349,11 +362,11 @@ func FilesZipTool() *mcp.Tool {
 }
 
 // NewFilesZipHandler creates the handler for moonraker_files_zip.
-func NewFilesZipHandler(api moonraker.API) mcp.ToolHandlerFor[FilesZipParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params FilesZipParams) (*mcp.CallToolResult, RawResult, error) {
+func NewFilesZipHandler(api moonraker.API) mcp.ToolHandlerFor[FilesZipParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params FilesZipParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requirePresent("items", len(params.Items))
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
 		body := map[string]any{"items": params.Items, "store_only": params.StoreOnly}
@@ -361,7 +374,7 @@ func NewFilesZipHandler(api moonraker.API) mcp.ToolHandlerFor[FilesZipParams, Ra
 			body[paramDest] = params.Dest
 		}
 
-		out, err := decodeRaw(api.Post(ctx, "/server/files/zip", nil, body))
+		out, err := decodeResult(api.Post(ctx, "/server/files/zip", nil, body))
 
 		return nil, out, err
 	}
@@ -369,11 +382,13 @@ func NewFilesZipHandler(api moonraker.API) mcp.ToolHandlerFor[FilesZipParams, Ra
 
 // FileDownloadParams defines the parameters for moonraker_files_download.
 type FileDownloadParams struct {
-	Root     string `json:"root"     jsonschema:"File-manager root, e.g. 'gcodes' (default), 'config', or 'logs'"`
-	Filename string `json:"filename" jsonschema:"Path of the file within the root, e.g. 'printer.cfg'"`
+	Root     string `json:"root,omitempty" jsonschema:"File-manager root, e.g. 'gcodes' (default), 'config', or 'logs'"`
+	Filename string `json:"filename"       jsonschema:"Path of the file within the root, e.g. 'printer.cfg'"`
 }
 
-// FileDownload is the output of moonraker_files_download.
+// FileDownload is the output of moonraker_files_download. Content has no
+// omitempty: an empty file should still report content as "" rather than dropping
+// the field, keeping the output shape uniform.
 type FileDownload struct {
 	Filename  string `json:"filename"`
 	Size      int    `json:"size"`
@@ -425,11 +440,11 @@ func NewFilesDownloadHandler(api moonraker.API) mcp.ToolHandlerFor[FileDownloadP
 
 // FilesUploadParams defines the parameters for moonraker_files_upload.
 type FilesUploadParams struct {
-	Root       string `json:"root"        jsonschema:"File-manager root to upload into, e.g. 'gcodes' (default)"`
-	Path       string `json:"path"        jsonschema:"Optional subdirectory within the root"`
-	Filename   string `json:"filename"    jsonschema:"Name to store the uploaded file under, e.g. 'part.gcode'"`
-	Content    string `json:"content"     jsonschema:"The full text content of the file to upload"`
-	StartPrint bool   `json:"start_print" jsonschema:"When true, start printing the file immediately after upload"`
+	Root       string `json:"root,omitempty"        jsonschema:"File-manager root to upload into, e.g. 'gcodes' (default)"`
+	Path       string `json:"path,omitempty"        jsonschema:"Optional subdirectory within the root"`
+	Filename   string `json:"filename"              jsonschema:"Name to store the uploaded file under, e.g. 'part.gcode'"`
+	Content    string `json:"content"               jsonschema:"The full text content of the file to upload; pass an empty string to upload an empty file"`
+	StartPrint bool   `json:"start_print,omitempty" jsonschema:"When true, start printing the file immediately after upload"`
 }
 
 // FilesUploadTool returns the definition for moonraker_files_upload.
@@ -442,14 +457,14 @@ func FilesUploadTool() *mcp.Tool {
 }
 
 // NewFilesUploadHandler creates the handler for moonraker_files_upload.
-func NewFilesUploadHandler(api moonraker.API) mcp.ToolHandlerFor[FilesUploadParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params FilesUploadParams) (*mcp.CallToolResult, RawResult, error) {
+func NewFilesUploadHandler(api moonraker.API) mcp.ToolHandlerFor[FilesUploadParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params FilesUploadParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramFilename, params.Filename)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
-		out, err := decodeRaw(api.Upload(ctx, &moonraker.UploadOptions{
+		out, err := decodeResult(api.Upload(ctx, &moonraker.UploadOptions{
 			Root:       rootOrDefault(params.Root),
 			Path:       params.Path,
 			Filename:   params.Filename,
@@ -471,14 +486,14 @@ func FilesDeleteTool() *mcp.Tool {
 }
 
 // NewFilesDeleteHandler creates the handler for moonraker_files_delete.
-func NewFilesDeleteHandler(api moonraker.API) mcp.ToolHandlerFor[FileDownloadParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params FileDownloadParams) (*mcp.CallToolResult, RawResult, error) {
+func NewFilesDeleteHandler(api moonraker.API) mcp.ToolHandlerFor[FileDownloadParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params FileDownloadParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramFilename, params.Filename)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
-		out, err := decodeRaw(api.Delete(ctx, filePath(params.Root, params.Filename), nil))
+		out, err := decodeResult(api.Delete(ctx, filePath(params.Root, params.Filename), nil))
 
 		return nil, out, err
 	}

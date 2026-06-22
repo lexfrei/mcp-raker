@@ -103,13 +103,13 @@ func QueryEndstopsTool() *mcp.Tool {
 }
 
 // NewQueryEndstopsHandler creates the handler for moonraker_query_endstops.
-func NewQueryEndstopsHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
+func NewQueryEndstopsHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
 	return func(
 		ctx context.Context,
 		_ *mcp.CallToolRequest,
 		_ NoParams,
-	) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Get(ctx, "/printer/query_endstops/status", nil))
+	) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Get(ctx, "/printer/query_endstops/status", nil))
 
 		return nil, out, err
 	}
@@ -131,20 +131,20 @@ func GcodeScriptTool() *mcp.Tool {
 }
 
 // NewGcodeScriptHandler creates the handler for moonraker_gcode_script.
-func NewGcodeScriptHandler(api moonraker.API) mcp.ToolHandlerFor[GcodeScriptParams, RawResult] {
+func NewGcodeScriptHandler(api moonraker.API) mcp.ToolHandlerFor[GcodeScriptParams, map[string]any] {
 	return func(
 		ctx context.Context,
 		_ *mcp.CallToolRequest,
 		params GcodeScriptParams,
-	) (*mcp.CallToolResult, RawResult, error) {
+	) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramScript, params.Script)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
 		query := url.Values{paramScript: {params.Script}}
 
-		out, err := decodeRaw(api.Post(ctx, "/printer/gcode/script", query, nil))
+		out, err := decodeResult(api.Post(ctx, "/printer/gcode/script", query, nil))
 
 		return nil, out, err
 	}
@@ -160,13 +160,13 @@ func GcodeHelpTool() *mcp.Tool {
 }
 
 // NewGcodeHelpHandler creates the handler for moonraker_gcode_help.
-func NewGcodeHelpHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
+func NewGcodeHelpHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
 	return func(
 		ctx context.Context,
 		_ *mcp.CallToolRequest,
 		_ NoParams,
-	) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Get(ctx, "/printer/gcode/help", nil))
+	) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Get(ctx, "/printer/gcode/help", nil))
 
 		return nil, out, err
 	}
@@ -183,19 +183,19 @@ func EmergencyStopTool() *mcp.Tool {
 }
 
 // NewEmergencyStopHandler creates the handler for moonraker_emergency_stop.
-func NewEmergencyStopHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
+func NewEmergencyStopHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
 	return func(
 		ctx context.Context,
 		_ *mcp.CallToolRequest,
 		_ NoParams,
-	) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Post(ctx, "/printer/emergency_stop", nil, nil))
+	) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Post(ctx, "/printer/emergency_stop", nil, nil))
 
 		return nil, out, err
 	}
 }
 
-// PrinterRestartTool returns the definition for moonraker_printer_restart (admin).
+// PrinterRestartTool returns the definition for moonraker_printer_restart.
 func PrinterRestartTool() *mcp.Tool {
 	return &mcp.Tool{
 		Name:        "moonraker_printer_restart",
@@ -205,19 +205,19 @@ func PrinterRestartTool() *mcp.Tool {
 }
 
 // NewPrinterRestartHandler creates the handler for moonraker_printer_restart.
-func NewPrinterRestartHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
+func NewPrinterRestartHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
 	return func(
 		ctx context.Context,
 		_ *mcp.CallToolRequest,
 		_ NoParams,
-	) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Post(ctx, "/printer/restart", nil, nil))
+	) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Post(ctx, "/printer/restart", nil, nil))
 
 		return nil, out, err
 	}
 }
 
-// FirmwareRestartTool returns the definition for moonraker_firmware_restart (admin).
+// FirmwareRestartTool returns the definition for moonraker_firmware_restart.
 func FirmwareRestartTool() *mcp.Tool {
 	return &mcp.Tool{
 		Name: "moonraker_firmware_restart",
@@ -228,13 +228,13 @@ func FirmwareRestartTool() *mcp.Tool {
 }
 
 // NewFirmwareRestartHandler creates the handler for moonraker_firmware_restart.
-func NewFirmwareRestartHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
+func NewFirmwareRestartHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
 	return func(
 		ctx context.Context,
 		_ *mcp.CallToolRequest,
 		_ NoParams,
-	) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Post(ctx, "/printer/firmware_restart", nil, nil))
+	) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Post(ctx, "/printer/firmware_restart", nil, nil))
 
 		return nil, out, err
 	}

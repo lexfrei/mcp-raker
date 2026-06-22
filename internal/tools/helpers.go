@@ -9,20 +9,6 @@ import (
 // NoParams is the input type for tools that take no parameters.
 type NoParams struct{}
 
-// RawResult carries an arbitrary Moonraker JSON payload for tools that do not
-// need a typed output shape. It mirrors Moonraker's own {"result": ...}
-// envelope so the model sees the response verbatim.
-//
-// The jsonschema tag on Result is load-bearing: without it, the SDK reflects the
-// any-typed field into an empty schema, which marshals to the boolean `true`.
-// A boolean in a property-schema position (`"properties":{"result":true}`) is
-// rejected by strict MCP clients and fails the whole tools/list. The tag gives
-// the field a description, so its schema marshals as a (non-empty, non-boolean)
-// object that still permits any result value.
-type RawResult struct {
-	Result any `json:"result" jsonschema:"The Moonraker result payload; its shape varies by endpoint"`
-}
-
 // ptrBool returns a pointer to value, for the *bool annotation hint fields.
 func ptrBool(value bool) *bool { return &value }
 
@@ -59,24 +45,69 @@ func writeDestructive(title string) *mcp.ToolAnnotations {
 	}
 }
 
-// decodeRaw turns a client result and error into a passthrough RawResult.
-func decodeRaw(raw json.RawMessage, err error) (RawResult, error) {
+// decodeResult normalizes a Moonraker result into a top-level JSON object.
+//
+// The client already strips Moonraker's {"result": ...} envelope, so an
+// object payload is returned verbatim with its fields at the top level — a
+// consumer always reads the data directly, never via a ".result" key. A scalar
+// "ok", an empty body, or any other non-object success payload normalizes to a
+// uniform {"ok": true} acknowledgement so action tools share one shape.
+//
+// Tools whose endpoint returns a bare array or a meaningful scalar (e.g. the
+// file list or an API key) must use a typed named-key wrapper instead, because
+// MCP structured content must be a JSON object.
+func decodeResult(raw json.RawMessage, err error) (map[string]any, error) {
 	if err != nil {
-		return RawResult{}, moonrakerErr("request failed", err)
+		return nil, moonrakerErr("request failed", err)
 	}
 
 	if len(raw) == 0 {
-		return RawResult{}, nil
+		return map[string]any{"ok": true}, nil
 	}
 
 	var value any
 
 	unErr := json.Unmarshal(raw, &value)
 	if unErr != nil {
-		return RawResult{}, moonrakerErr("decode response", unErr)
+		return nil, moonrakerErr("decode response", unErr)
 	}
 
-	return RawResult{Result: value}, nil
+	if obj, ok := value.(map[string]any); ok {
+		return obj, nil
+	}
+
+	return map[string]any{"ok": true}, nil
+}
+
+// decodePassthrough returns the Moonraker payload unchanged, for tools whose
+// response shape varies by request (the extension-request and MQTT-subscribe
+// proxies). Callers wrap the value under a single key so the structured content
+// stays a JSON object even when the payload is a bare scalar or array.
+func decodePassthrough(raw json.RawMessage, err error) (any, error) {
+	if err != nil {
+		return nil, moonrakerErr("request failed", err)
+	}
+
+	if len(raw) == 0 {
+		//nolint:nilnil // An empty proxy response legitimately carries no value and no error.
+		return nil, nil
+	}
+
+	var value any
+
+	unErr := json.Unmarshal(raw, &value)
+	if unErr != nil {
+		return nil, moonrakerErr("decode response", unErr)
+	}
+
+	if value == nil {
+		// The body was a literal JSON null. Return it as raw bytes rather than a
+		// nil interface, which the SDK would drop as "no result"; this keeps the
+		// proxy pass-through verbatim.
+		return raw, nil
+	}
+
+	return value, nil
 }
 
 // decodeTyped unmarshals a client result and error into T.

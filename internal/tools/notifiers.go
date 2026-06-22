@@ -18,9 +18,9 @@ func NotifiersListTool() *mcp.Tool {
 }
 
 // NewNotifiersListHandler creates the handler for moonraker_notifiers_list.
-func NewNotifiersListHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Get(ctx, "/server/notifiers/list", nil))
+func NewNotifiersListHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Get(ctx, "/server/notifiers/list", nil))
 
 		return nil, out, err
 	}

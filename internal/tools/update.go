@@ -12,7 +12,7 @@ import (
 // UpdateNameParams names an optional update target (a configured client,
 // "moonraker", "klipper", "system", etc.).
 type UpdateNameParams struct {
-	Name string `json:"name" jsonschema:"Name of the update target; omit to apply to every configured target"`
+	Name string `json:"name,omitempty" jsonschema:"Name of the update target; omit to apply to every configured target"`
 }
 
 // UpdateStatusTool returns the definition for moonraker_update_status.
@@ -25,9 +25,9 @@ func UpdateStatusTool() *mcp.Tool {
 }
 
 // NewUpdateStatusHandler creates the handler for moonraker_update_status.
-func NewUpdateStatusHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Get(ctx, "/machine/update/status", nil))
+func NewUpdateStatusHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Get(ctx, "/machine/update/status", nil))
 
 		return nil, out, err
 	}
@@ -43,14 +43,14 @@ func UpdateRefreshTool() *mcp.Tool {
 }
 
 // NewUpdateRefreshHandler creates the handler for moonraker_update_refresh.
-func NewUpdateRefreshHandler(api moonraker.API) mcp.ToolHandlerFor[UpdateNameParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params UpdateNameParams) (*mcp.CallToolResult, RawResult, error) {
+func NewUpdateRefreshHandler(api moonraker.API) mcp.ToolHandlerFor[UpdateNameParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params UpdateNameParams) (*mcp.CallToolResult, map[string]any, error) {
 		query := url.Values{}
 		if params.Name != "" {
 			query.Set(paramName, params.Name)
 		}
 
-		out, err := decodeRaw(api.Post(ctx, "/machine/update/refresh", query, nil))
+		out, err := decodeResult(api.Post(ctx, "/machine/update/refresh", query, nil))
 
 		return nil, out, err
 	}
@@ -66,14 +66,14 @@ func UpdateUpgradeTool() *mcp.Tool {
 }
 
 // NewUpdateUpgradeHandler creates the handler for moonraker_update_upgrade.
-func NewUpdateUpgradeHandler(api moonraker.API) mcp.ToolHandlerFor[UpdateNameParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params UpdateNameParams) (*mcp.CallToolResult, RawResult, error) {
+func NewUpdateUpgradeHandler(api moonraker.API) mcp.ToolHandlerFor[UpdateNameParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params UpdateNameParams) (*mcp.CallToolResult, map[string]any, error) {
 		query := url.Values{}
 		if params.Name != "" {
 			query.Set(paramName, params.Name)
 		}
 
-		out, err := decodeRaw(api.Post(ctx, "/machine/update/upgrade", query, nil))
+		out, err := decodeResult(api.Post(ctx, "/machine/update/upgrade", query, nil))
 
 		return nil, out, err
 	}
@@ -81,8 +81,8 @@ func NewUpdateUpgradeHandler(api moonraker.API) mcp.ToolHandlerFor[UpdateNamePar
 
 // UpdateRecoverParams defines the parameters for moonraker_update_recover.
 type UpdateRecoverParams struct {
-	Name string `json:"name" jsonschema:"Name of the git-backed update target to repair"`
-	Hard bool   `json:"hard" jsonschema:"When true, perform a hard recovery by re-cloning the repository"`
+	Name string `json:"name"           jsonschema:"Name of the git-backed update target to repair"`
+	Hard bool   `json:"hard,omitempty" jsonschema:"When true, perform a hard recovery by re-cloning the repository"`
 }
 
 // UpdateRecoverTool returns the definition for moonraker_update_recover (admin).
@@ -95,11 +95,11 @@ func UpdateRecoverTool() *mcp.Tool {
 }
 
 // NewUpdateRecoverHandler creates the handler for moonraker_update_recover.
-func NewUpdateRecoverHandler(api moonraker.API) mcp.ToolHandlerFor[UpdateRecoverParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params UpdateRecoverParams) (*mcp.CallToolResult, RawResult, error) {
+func NewUpdateRecoverHandler(api moonraker.API) mcp.ToolHandlerFor[UpdateRecoverParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params UpdateRecoverParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramName, params.Name)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
 		query := url.Values{paramName: {params.Name}}
@@ -107,7 +107,7 @@ func NewUpdateRecoverHandler(api moonraker.API) mcp.ToolHandlerFor[UpdateRecover
 			query.Set("hard", "true")
 		}
 
-		out, err := decodeRaw(api.Post(ctx, "/machine/update/recover", query, nil))
+		out, err := decodeResult(api.Post(ctx, "/machine/update/recover", query, nil))
 
 		return nil, out, err
 	}
@@ -130,14 +130,14 @@ func UpdateRollbackTool() *mcp.Tool {
 }
 
 // NewUpdateRollbackHandler creates the handler for moonraker_update_rollback.
-func NewUpdateRollbackHandler(api moonraker.API) mcp.ToolHandlerFor[UpdateRollbackParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params UpdateRollbackParams) (*mcp.CallToolResult, RawResult, error) {
+func NewUpdateRollbackHandler(api moonraker.API) mcp.ToolHandlerFor[UpdateRollbackParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params UpdateRollbackParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramName, params.Name)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
-		out, err := decodeRaw(api.Post(ctx, "/machine/update/rollback", url.Values{paramName: {params.Name}}, nil))
+		out, err := decodeResult(api.Post(ctx, "/machine/update/rollback", url.Values{paramName: {params.Name}}, nil))
 
 		return nil, out, err
 	}

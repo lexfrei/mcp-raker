@@ -18,9 +18,9 @@ func AnalysisStatusTool() *mcp.Tool {
 }
 
 // NewAnalysisStatusHandler creates the handler for moonraker_analysis_status.
-func NewAnalysisStatusHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, RawResult, error) {
-		out, err := decodeRaw(api.Get(ctx, "/server/analysis/status", nil))
+func NewAnalysisStatusHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, _ NoParams) (*mcp.CallToolResult, map[string]any, error) {
+		out, err := decodeResult(api.Get(ctx, "/server/analysis/status", nil))
 
 		return nil, out, err
 	}
@@ -28,9 +28,9 @@ func NewAnalysisStatusHandler(api moonraker.API) mcp.ToolHandlerFor[NoParams, Ra
 
 // AnalysisEstimateParams defines the parameters for moonraker_analysis_estimate.
 type AnalysisEstimateParams struct {
-	Filename        string `json:"filename"         jsonschema:"Gcode file to estimate, relative to the gcodes root"`
-	EstimatorConfig string `json:"estimator_config" jsonschema:"Optional estimator configuration name to use"`
-	UpdateMetadata  bool   `json:"update_metadata"  jsonschema:"When true, write the estimate back into the file's metadata"`
+	Filename        string `json:"filename"                   jsonschema:"Gcode file to estimate, relative to the gcodes root"`
+	EstimatorConfig string `json:"estimator_config,omitempty" jsonschema:"Optional estimator configuration name to use"`
+	UpdateMetadata  bool   `json:"update_metadata,omitempty"  jsonschema:"When true, write the estimate back into the file's metadata"`
 }
 
 // AnalysisEstimateTool returns the definition for moonraker_analysis_estimate.
@@ -43,11 +43,11 @@ func AnalysisEstimateTool() *mcp.Tool {
 }
 
 // NewAnalysisEstimateHandler creates the handler for moonraker_analysis_estimate.
-func NewAnalysisEstimateHandler(api moonraker.API) mcp.ToolHandlerFor[AnalysisEstimateParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params AnalysisEstimateParams) (*mcp.CallToolResult, RawResult, error) {
+func NewAnalysisEstimateHandler(api moonraker.API) mcp.ToolHandlerFor[AnalysisEstimateParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params AnalysisEstimateParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramFilename, params.Filename)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
 		body := map[string]any{paramFilename: params.Filename, "update_metadata": params.UpdateMetadata}
@@ -55,7 +55,7 @@ func NewAnalysisEstimateHandler(api moonraker.API) mcp.ToolHandlerFor[AnalysisEs
 			body["estimator_config"] = params.EstimatorConfig
 		}
 
-		out, err := decodeRaw(api.Post(ctx, "/server/analysis/estimate", nil, body))
+		out, err := decodeResult(api.Post(ctx, "/server/analysis/estimate", nil, body))
 
 		return nil, out, err
 	}
@@ -71,14 +71,14 @@ func AnalysisProcessTool() *mcp.Tool {
 }
 
 // NewAnalysisProcessHandler creates the handler for moonraker_analysis_process.
-func NewAnalysisProcessHandler(api moonraker.API) mcp.ToolHandlerFor[FilenameParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params FilenameParams) (*mcp.CallToolResult, RawResult, error) {
+func NewAnalysisProcessHandler(api moonraker.API) mcp.ToolHandlerFor[FilenameParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params FilenameParams) (*mcp.CallToolResult, map[string]any, error) {
 		valErr := requireString(paramFilename, params.Filename)
 		if valErr != nil {
-			return nil, RawResult{}, valErr
+			return nil, map[string]any{}, valErr
 		}
 
-		out, err := decodeRaw(api.Post(ctx, "/server/analysis/process", nil, map[string]any{paramFilename: params.Filename}))
+		out, err := decodeResult(api.Post(ctx, "/server/analysis/process", nil, map[string]any{paramFilename: params.Filename}))
 
 		return nil, out, err
 	}
@@ -86,7 +86,7 @@ func NewAnalysisProcessHandler(api moonraker.API) mcp.ToolHandlerFor[FilenamePar
 
 // AnalysisDumpConfigParams defines the parameters for moonraker_analysis_dump_config.
 type AnalysisDumpConfigParams struct {
-	DestConfig string `json:"dest_config" jsonschema:"Optional destination path to write the estimator configuration to"`
+	DestConfig string `json:"dest_config,omitempty" jsonschema:"Optional destination path to write the estimator configuration to"`
 }
 
 // AnalysisDumpConfigTool returns the definition for moonraker_analysis_dump_config.
@@ -99,14 +99,14 @@ func AnalysisDumpConfigTool() *mcp.Tool {
 }
 
 // NewAnalysisDumpConfigHandler creates the handler for moonraker_analysis_dump_config.
-func NewAnalysisDumpConfigHandler(api moonraker.API) mcp.ToolHandlerFor[AnalysisDumpConfigParams, RawResult] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, params AnalysisDumpConfigParams) (*mcp.CallToolResult, RawResult, error) {
+func NewAnalysisDumpConfigHandler(api moonraker.API) mcp.ToolHandlerFor[AnalysisDumpConfigParams, map[string]any] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, params AnalysisDumpConfigParams) (*mcp.CallToolResult, map[string]any, error) {
 		var body map[string]any
 		if params.DestConfig != "" {
 			body = map[string]any{"dest_config": params.DestConfig}
 		}
 
-		out, err := decodeRaw(api.Post(ctx, "/server/analysis/dump_config", nil, body))
+		out, err := decodeResult(api.Post(ctx, "/server/analysis/dump_config", nil, body))
 
 		return nil, out, err
 	}

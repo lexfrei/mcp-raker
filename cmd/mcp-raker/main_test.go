@@ -5,6 +5,8 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"runtime/debug"
+	"slices"
 	"strings"
 	"testing"
 
@@ -14,7 +16,7 @@ import (
 )
 
 // adminToolCount is the number of tools gated behind MOONRAKER_ENABLE_ADMIN.
-const adminToolCount = 18
+const adminToolCount = 16
 
 func testLogger() *slog.Logger {
 	return slog.New(slog.DiscardHandler)
@@ -116,6 +118,21 @@ func TestRegisterTools_CoreOnly(t *testing.T) {
 		t.Error("core tool moonraker_emergency_stop not registered")
 	}
 
+	// Klipper restart is a printer action, not an OS/service admin action, so it
+	// is available without MOONRAKER_ENABLE_ADMIN.
+	if !names["moonraker_printer_restart"] {
+		t.Error("core tool moonraker_printer_restart not registered")
+	}
+
+	if !names["moonraker_firmware_restart"] {
+		t.Error("core tool moonraker_firmware_restart not registered")
+	}
+
+	// The Moonraker server restart (a service action) stays behind the admin gate.
+	if names["moonraker_server_restart"] {
+		t.Error("admin tool moonraker_server_restart registered without MOONRAKER_ENABLE_ADMIN")
+	}
+
 	if names["moonraker_machine_shutdown"] {
 		t.Error("admin tool moonraker_machine_shutdown registered without MOONRAKER_ENABLE_ADMIN")
 	}
@@ -175,6 +192,151 @@ func TestToolOutputSchemasNoBooleanProperty(t *testing.T) {
 				t.Errorf("%s: property %q has a bare boolean schema %s (rejected by strict clients)", name, prop, value)
 			}
 		}
+	}
+}
+
+// TestOptionalParamsNotRequired verifies that filter and paging parameters with
+// sensible defaults are not marked required in the generated input schema, while
+// genuinely required parameters still are. The SDK marks every struct field
+// required unless its json tag carries omitempty, so a regression here means a
+// caller is forced to send placeholder values.
+func TestOptionalParamsNotRequired(t *testing.T) {
+	t.Parallel()
+
+	tools := listTools(t, true)
+
+	required := func(name string) []string {
+		tool, ok := tools[name]
+		if !ok {
+			t.Fatalf("tool %q not registered", name)
+		}
+
+		schema, ok := tool.InputSchema.(map[string]any)
+		if !ok {
+			t.Fatalf("tool %q input schema is %T, want a JSON object", name, tool.InputSchema)
+		}
+
+		raw, _ := schema["required"].([]any)
+
+		out := make([]string, 0, len(raw))
+		for _, value := range raw {
+			if field, ok := value.(string); ok {
+				out = append(out, field)
+			}
+		}
+
+		return out
+	}
+
+	// These tools have only optional filter/paging parameters.
+	allOptional := []string{
+		"moonraker_history_list",
+		"moonraker_files_list",
+		"moonraker_temperature_store",
+		"moonraker_gcode_store",
+		"moonraker_sensors_list",
+		"moonraker_sensors_measurements",
+		"moonraker_files_directory",
+		"moonraker_update_refresh",
+		"moonraker_db_backup",
+	}
+	for _, name := range allOptional {
+		if got := required(name); len(got) != 0 {
+			t.Errorf("%s: required = %v, want none", name, got)
+		}
+	}
+
+	// These tools keep their genuinely required parameters. A database write must
+	// require value so a client cannot omit it and store null by accident.
+	mustRequire := map[string][]string{
+		"moonraker_print_start":  {"filename"},
+		"moonraker_history_job":  {"uid"},
+		"moonraker_gcode_script": {"script"},
+		"moonraker_db_post_item": {"namespace", "key", "value"},
+		"moonraker_files_upload": {"filename", "content"},
+		"moonraker_mqtt_publish": {"topic", "payload"},
+		"moonraker_wled_set":     {"strip"},
+		"moonraker_sensors_info": {"sensor"},
+	}
+	for name, fields := range mustRequire {
+		for _, field := range fields {
+			if !slices.Contains(required(name), field) {
+				t.Errorf("%s: required = %v, want it to include %q", name, required(name), field)
+			}
+		}
+	}
+}
+
+func TestResolveBuild(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		version      string
+		revision     string
+		info         *debug.BuildInfo
+		ok           bool
+		wantVersion  string
+		wantRevision string
+	}{
+		{
+			name:     "ldflags win over build info",
+			version:  "1.2.3",
+			revision: "abcdef",
+			info:     &debug.BuildInfo{Main: debug.Module{Version: "v9.9.9"}},
+			ok:       true,
+
+			wantVersion:  "1.2.3",
+			wantRevision: "abcdef",
+		},
+		{
+			name:     "go install stamps the module version",
+			version:  "dev",
+			revision: "unknown",
+			info:     &debug.BuildInfo{Main: debug.Module{Version: "v0.2.0"}},
+			ok:       true,
+
+			wantVersion:  "v0.2.0",
+			wantRevision: "unknown",
+		},
+		{
+			name:     "vcs revision is shortened and marked dirty",
+			version:  "dev",
+			revision: "unknown",
+			info: &debug.BuildInfo{
+				Main: debug.Module{Version: "(devel)"},
+				Settings: []debug.BuildSetting{
+					{Key: "vcs.revision", Value: "0123456789abcdef0123"},
+					{Key: "vcs.modified", Value: "true"},
+				},
+			},
+			ok: true,
+
+			wantVersion:  "dev",
+			wantRevision: "0123456789ab-dirty",
+		},
+		{
+			name:     "no build info keeps defaults",
+			version:  "dev",
+			revision: "unknown",
+			info:     nil,
+			ok:       false,
+
+			wantVersion:  "dev",
+			wantRevision: "unknown",
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			gotVersion, gotRevision := resolveBuild(testCase.version, testCase.revision, testCase.info, testCase.ok)
+			if gotVersion != testCase.wantVersion || gotRevision != testCase.wantRevision {
+				t.Errorf("resolveBuild = (%q, %q), want (%q, %q)",
+					gotVersion, gotRevision, testCase.wantVersion, testCase.wantRevision)
+			}
+		})
 	}
 }
 

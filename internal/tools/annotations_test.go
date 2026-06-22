@@ -23,6 +23,8 @@ func TestDestructiveAnnotations(t *testing.T) {
 		"print_cancel":          tools.PrintCancelTool(),
 		"gcode_script":          tools.GcodeScriptTool(),
 		"emergency_stop":        tools.EmergencyStopTool(),
+		"printer_restart":       tools.PrinterRestartTool(),
+		"firmware_restart":      tools.FirmwareRestartTool(),
 		"files_delete":          tools.FilesDeleteTool(),
 		"files_delete_dir":      tools.FilesDeleteDirectoryTool(),
 		"power_off":             tools.PowerOffTool(),
