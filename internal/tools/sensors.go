@@ -98,9 +98,11 @@ func NewSensorsMeasurementsHandler(api moonraker.API) mcp.ToolHandlerFor[Sensors
 
 		raw, reqErr := api.Get(ctx, "/machine/sensors/measurements", query)
 
-		// Like sensors_list, the endpoint 404s when no [sensor] section exists.
-		// Measurements are keyed by sensor name, so "none configured" is {}.
-		if errors.Is(reqErr, moonraker.ErrNotFound) {
+		// Only the all-sensors case degrades on 404 (no [sensor] section exists):
+		// measurements are keyed by sensor name, so "none configured" is {}. A 404
+		// for a specifically requested sensor is a real "no such sensor" error and
+		// must propagate, not masquerade as empty measurements.
+		if params.Sensor == "" && errors.Is(reqErr, moonraker.ErrNotFound) {
 			return nil, map[string]any{}, nil
 		}
 

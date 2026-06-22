@@ -59,18 +59,31 @@ func TestSensorsList_PropagatesOtherErrors(t *testing.T) {
 	}
 }
 
-func TestSensorsMeasurements_GracefulOnNotFound(t *testing.T) {
+func TestSensorsMeasurements_GracefulOnNotFoundForAll(t *testing.T) {
 	t.Parallel()
 
+	// No specific sensor requested: a 404 means no [sensor] section is configured.
 	mock := &mockAPI{err: moonraker.ErrNotFound}
 
 	_, out, err := tools.NewSensorsMeasurementsHandler(mock)(t.Context(), nil, tools.SensorsMeasurementsParams{})
 	if err != nil {
-		t.Fatalf("handler should not error on 404: %v", err)
+		t.Fatalf("handler should not error on 404 for all sensors: %v", err)
 	}
 
 	if len(out) != 0 {
 		t.Errorf("out = %v, want an empty measurements object", out)
+	}
+}
+
+func TestSensorsMeasurements_PropagatesNotFoundForNamedSensor(t *testing.T) {
+	t.Parallel()
+
+	// A 404 for a specifically requested sensor is a real "no such sensor" error.
+	mock := &mockAPI{err: moonraker.ErrNotFound}
+
+	_, _, err := tools.NewSensorsMeasurementsHandler(mock)(t.Context(), nil, tools.SensorsMeasurementsParams{Sensor: testSensor})
+	if !errors.Is(err, tools.ErrMoonraker) {
+		t.Fatalf("err = %v, want the 404 to propagate for a named sensor", err)
 	}
 }
 
